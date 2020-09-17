@@ -19,7 +19,9 @@
  * 2020-01-01: V2.2.0 增加文件说明
  * 2020-05-30: V2.2.5 更新标题移动、双击最大化/正常、到顶最大化、最大化后拖拽正常
  * 2020-07-01: V2.2.6 仿照QQ，重绘标题栏按钮
- * 2020-07-05: V2.2.6 UIForm：更新窗体控制按钮圆角和跟随窗体圆角变化。
+ * 2020-07-05: V2.2.6 更新窗体控制按钮圆角和跟随窗体圆角变化。
+ * 2020-09-17: V2.2.7 重写WindowState相关代码
+ * 2020-09-17: V2.2.7 增加了窗体可拉拽调整大小ShowDragStretch属性
 ******************************************************************************/
 
 using System;
@@ -39,10 +41,6 @@ namespace Sunny.UI
 
         private UIStatusForm statusForm;
 
-        public delegate void OnWindowStateChange(object sender, FormWindowState state);
-
-        public event OnWindowStateChange WindowStateChange;
-
         public UIForm()
         {
             InitializeComponent();
@@ -52,11 +50,32 @@ namespace Sunny.UI
                 SetStyle(UIStyles.Style);
             }
 
-            SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.DoubleBuffer, true);
+            base.SetStyle(
+                ControlStyles.UserPaint |
+                ControlStyles.DoubleBuffer |
+                ControlStyles.OptimizedDoubleBuffer |
+                ControlStyles.AllPaintingInWmPaint |
+                //ControlStyles.ResizeRedraw |
+                ControlStyles.SupportsTransparentBackColor, true);
             UpdateStyles();
+
             Version = UIGlobal.Version;
+            FormBorderStyle = FormBorderStyle.None;
+            base.MaximumSize = ShowFullScreen ? Screen.PrimaryScreen.Bounds.Size : Screen.PrimaryScreen.WorkingArea.Size;
+        }
+
+        //不显示FormBorderStyle属性
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new FormBorderStyle FormBorderStyle
+        {
+            get { return base.FormBorderStyle; }
+            set
+            {
+                base.FormBorderStyle = FormBorderStyle.None;
+                Console.WriteLine(value);
+            }
         }
 
         public void Render()
@@ -141,13 +160,17 @@ namespace Sunny.UI
                 }
             }
 
-            if (e.Control.Top < TitleHeight)
+            if (ShowTitle && e.Control.Top < TitleHeight)
             {
                 e.Control.Top = Padding.Top;
             }
         }
 
+        /// <summary>
+        /// Tag字符串
+        /// </summary>
         [DefaultValue(null)]
+        [Description("获取或设置包含有关控件的数据的对象字符串"), Category("SunnyUI")]
         public string TagString { get; set; }
 
         /// <summary>
@@ -271,7 +294,7 @@ namespace Sunny.UI
         /// <summary>
         /// 标题栏高度
         /// </summary>
-        [Description("标题栏高度"), Category("Appearance"), DefaultValue(35)]
+        [Description("标题栏高度"), Category("SunnyUI"), DefaultValue(35)]
         public int TitleHeight
         {
             get => titleHeight;
@@ -292,7 +315,7 @@ namespace Sunny.UI
         /// <summary>
         /// 标题栏颜色
         /// </summary>
-        [Description("标题栏颜色"), Category("Appearance"), DefaultValue(typeof(Color), "80, 160, 255")]
+        [Description("标题栏颜色"), Category("SunnyUI"), DefaultValue(typeof(Color), "80, 160, 255")]
         public Color TitleColor
         {
             get => titleColor;
@@ -312,7 +335,7 @@ namespace Sunny.UI
         /// <summary>
         /// 标题颜色
         /// </summary>
-        [Description("标题前景色（标题颜色）"), Category("Appearance"), DefaultValue(typeof(Color), "White")]
+        [Description("标题前景色（标题颜色）"), Category("SunnyUI"), DefaultValue(typeof(Color), "White")]
         public Color TitleForeColor
         {
             get => titleForeColor;
@@ -353,8 +376,7 @@ namespace Sunny.UI
 
                 if (MinimizeBox)
                 {
-                    MinimizeBoxRect = new Rectangle(MaximizeBox ? MaximizeBoxRect.Left - 28 - 2 : ControlBoxRect.Left - 28 - 2,
-                            ControlBoxRect.Top, 28, 28);
+                    MinimizeBoxRect = new Rectangle(MaximizeBox ? MaximizeBoxRect.Left - 28 - 2 : ControlBoxRect.Left - 28 - 2, ControlBoxRect.Top, 28, 28);
                     ControlBoxLeft = MinimizeBoxRect.Left - 2;
                 }
                 else
@@ -413,7 +435,7 @@ namespace Sunny.UI
         /// <summary>
         /// 填充颜色，当值为背景色或透明色或空值则不填充
         /// </summary>
-        [Description("背景颜色"), Category("Appearance")]
+        [Description("背景颜色"), Category("SunnyUI")]
         [DefaultValue(typeof(Color), "48, 48, 48")]
         public override Color ForeColor
         {
@@ -434,7 +456,7 @@ namespace Sunny.UI
         /// 边框颜色
         /// </summary>
         /// <value>The color of the border style.</value>
-        [Description("边框颜色"), Category("Appearance")]
+        [Description("边框颜色"), Category("SunnyUI")]
         public Color RectColor
         {
             get => rectColor;
@@ -454,21 +476,20 @@ namespace Sunny.UI
             {
                 if (InControlBox)
                 {
-                    Close();
                     InControlBox = false;
+                    Close();
                 }
 
                 if (InMinBox)
                 {
-                    base.WindowState = FormWindowState.Minimized;
-                    WindowStateChange?.Invoke(this, FormWindowState.Minimized);
                     InMinBox = false;
+                    WindowState = FormWindowState.Minimized;
                 }
 
                 if (InMaxBox)
                 {
-                    ShowMaximize();
                     InMaxBox = false;
+                    ShowMaximize();
                 }
             }
         }
@@ -486,7 +507,8 @@ namespace Sunny.UI
         private void ShowMaximize(bool IsOnMoving = false)
         {
             Screen screen = Screen.FromPoint(MousePosition);
-            if (windowState == FormWindowState.Normal)
+            base.MaximumSize = ShowFullScreen ? Screen.PrimaryScreen.Bounds.Size : Screen.PrimaryScreen.WorkingArea.Size;
+            if (WindowState == FormWindowState.Normal)
             {
                 size = Size;
                 // 若窗体从正常模式->最大化模式，该操作是由移动窗体至顶部触发的，记录的是移动前的窗体位置
@@ -496,11 +518,9 @@ namespace Sunny.UI
                 Left = screen.Bounds.Left;
                 Top = screen.Bounds.Top;
                 SetFormRoundRectRegion(this, 0);
-                if (ShowFullScreen) base.WindowState = FormWindowState.Maximized;
-                windowState = FormWindowState.Maximized;
-                WindowStateChange?.Invoke(this, FormWindowState.Maximized);
+                WindowState = FormWindowState.Maximized;
             }
-            else if (windowState == FormWindowState.Maximized)
+            else if (WindowState == FormWindowState.Maximized)
             {
                 if (size.Width == 0 || size.Height == 0)
                 {
@@ -512,11 +532,9 @@ namespace Sunny.UI
                     screen.Bounds.Top + screen.WorkingArea.Height / 2 - Size.Height / 2);
 
                 if (location.X == 0 && location.Y == 0) location = center;
-                Location = StartPosition == FormStartPosition.CenterScreen ? center : location;
+                Location = location;
                 SetFormRoundRectRegion(this, ShowRadius ? 5 : 0);
-                windowState = FormWindowState.Normal;
-                base.WindowState = FormWindowState.Normal;
-                WindowStateChange?.Invoke(this, FormWindowState.Normal);
+                WindowState = FormWindowState.Normal;
             }
 
             Invalidate();
@@ -621,7 +639,7 @@ namespace Sunny.UI
         {
             if (FormMoveMouseDown && !MousePosition.Equals(mouseOffset))
             {
-                if (windowState == FormWindowState.Maximized)
+                if (WindowState == FormWindowState.Maximized)
                 {
                     int MaximizedWidth = Width;
                     int LocationX = Left;
@@ -691,6 +709,8 @@ namespace Sunny.UI
                     InControlBox = InMaxBox = InMinBox = false;
                 }
             }
+
+            base.OnMouseMove(e);
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -750,7 +770,7 @@ namespace Sunny.UI
             if (ShowRect)
             {
                 Point[] points;
-                bool unShowRadius = !ShowRadius || windowState == FormWindowState.Maximized ||
+                bool unShowRadius = !ShowRadius || WindowState == FormWindowState.Maximized ||
                                     (Width == Screen.PrimaryScreen.WorkingArea.Width &&
                                      Height == Screen.PrimaryScreen.WorkingArea.Height);
                 if (unShowRadius)
@@ -836,7 +856,7 @@ namespace Sunny.UI
                 //         ? FontAwesomeIcons.fa_window_restore
                 //         : FontAwesomeIcons.fa_window_maximize, 24, Color.White, MaximizeBoxRect, 1);
 
-                if (windowState == FormWindowState.Maximized)
+                if (WindowState == FormWindowState.Maximized)
                 {
                     e.Graphics.DrawRectangle(Color.White,
                         MaximizeBoxRect.Left + MaximizeBoxRect.Width / 2 - 5,
@@ -868,7 +888,7 @@ namespace Sunny.UI
                         MaximizeBoxRect.Top + MaximizeBoxRect.Height / 2 + 3);
                 }
 
-                if (windowState == FormWindowState.Normal)
+                if (WindowState == FormWindowState.Normal)
                 {
                     e.Graphics.DrawRectangle(Color.White,
                         MaximizeBoxRect.Left + MaximizeBoxRect.Width / 2 - 5,
@@ -909,7 +929,7 @@ namespace Sunny.UI
             }
             else
             {
-                e.Graphics.DrawString(Text, Font, titleForeColor,6 + (ShowIcon && Icon != null ? 26 : 0), (TitleHeight - sf.Height) / 2);
+                e.Graphics.DrawString(Text, Font, titleForeColor, 6 + (ShowIcon && Icon != null ? 26 : 0), (TitleHeight - sf.Height) / 2);
             }
         }
 
@@ -924,7 +944,7 @@ namespace Sunny.UI
         /// <summary>
         /// 配色主题
         /// </summary>
-        [Description("配色主题"), Category("Appearance")]
+        [Description("配色主题"), Category("SunnyUI")]
         [DefaultValue(UIStyle.Blue)]
         public UIStyle Style
         {
@@ -932,7 +952,7 @@ namespace Sunny.UI
             set => SetStyle(value);
         }
 
-        [Description("自定义主题模式（开启后全局主题更改将对当前窗体无效）"), Category("Appearance")]
+        [Description("自定义主题模式（开启后全局主题更改将对当前窗体无效）"), Category("SunnyUI")]
         [DefaultValue(false)]
         public bool StyleCustomMode { get; set; }
 
@@ -1012,7 +1032,7 @@ namespace Sunny.UI
         /// <summary>
         /// 是否显示圆角
         /// </summary>
-        [Description("是否显示圆角"), Category("Appearance")]
+        [Description("是否显示圆角"), Category("SunnyUI")]
         [DefaultValue(true)]
         public bool ShowRadius
         {
@@ -1033,7 +1053,7 @@ namespace Sunny.UI
         /// <summary>
         /// 是否显示边框
         /// </summary>
-        [Description("是否显示边框"), Category("Appearance")]
+        [Description("是否显示边框"), Category("SunnyUI")]
         [DefaultValue(true)]
         public bool ShowRect
         {
@@ -1133,7 +1153,7 @@ namespace Sunny.UI
         /// <param name="e">The <see cref="MouseEventArgs" /> instance containing the event data.</param>
         private void CtrlMouseDown(object sender, MouseEventArgs e)
         {
-            if (windowState == FormWindowState.Maximized)
+            if (WindowState == FormWindowState.Maximized)
             {
                 return;
             }
@@ -1158,7 +1178,7 @@ namespace Sunny.UI
                 return;
             }
 
-            if (windowState == FormWindowState.Maximized)
+            if (WindowState == FormWindowState.Maximized)
             {
                 SetFormRoundRectRegion(this, 0);
             }
@@ -1183,7 +1203,7 @@ namespace Sunny.UI
             }
         }
 
-        [Description("文字对齐方式"), Category("Appearance")]
+        [Description("文字对齐方式"), Category("SunnyUI")]
         public StringAlignment TextAlignment
         {
             get => textAlignment;
@@ -1196,35 +1216,15 @@ namespace Sunny.UI
 
         public string CloseAskString { get; set; }
 
-        private FormWindowState windowState = FormWindowState.Normal;
-
-        public new FormWindowState WindowState
-        {
-            get => windowState;
-            set
-            {
-                if (value == FormWindowState.Minimized)
-                {
-                    base.WindowState = FormWindowState.Minimized;
-                    return;
-                }
-
-                ShowMaximize();
-                windowState = value;
-            }
-        }
-
         protected override CreateParams CreateParams
         {
             get
             {
-                if (this.FormBorderStyle == FormBorderStyle.None)
+                if (base.FormBorderStyle == FormBorderStyle.None)
                 {
-                    // 当边框样式为FormBorderStyle.None时
                     // 点击窗体任务栏图标，可以进行最小化
-                    const int WS_MINIMIZEBOX = 0x00020000;
                     CreateParams cp = base.CreateParams;
-                    cp.Style = cp.Style | WS_MINIMIZEBOX;
+                    cp.Style |= 0x00020000;
                     return cp;
                 }
                 else
@@ -1234,27 +1234,67 @@ namespace Sunny.UI
             }
         }
 
-        public void Show(FormWindowState state)
+        private bool showDragStretch;
+        [Description("显示边框可拖拽调整窗体大小"), Category("SunnyUI"), DefaultValue(false)]
+        public bool ShowDragStretch
         {
-            ShowFullScreen = false;
-
-            switch (state)
+            get => showDragStretch;
+            set
             {
-                case FormWindowState.Minimized:
-                    WindowState = FormWindowState.Minimized;
-                    base.WindowState = FormWindowState.Minimized;
-                    break;
-                case FormWindowState.Maximized:
-                    base.WindowState = FormWindowState.Normal;
-                    WindowState = FormWindowState.Normal;
-                    ShowMaximize();
-                    break;
-                case FormWindowState.Normal:
-                    base.WindowState = FormWindowState.Normal;
-                    WindowState = FormWindowState.Maximized;
-                    ShowMaximize();
-                    break;
+                showDragStretch = value;
+                if (value)
+                {
+                    ShowRect = true;
+                    ShowRadius = false;
+                    Padding = new Padding(2, showTitle ? TitleHeight : 2, 2, 2);
+                }
             }
         }
+
+        #region 拉拽调整窗体大小
+        const int WM_LEFT = 10;
+        const int WM_RIGHT = 11;
+        const int WM_TOP = 12;
+        const int WM_TOPLEFT = 13;
+        const int WM_TOPRIGHT = 14;
+        const int WM_BOTTOM = 15;
+        const int WM_BOTTOMLEFT = 0x10;
+        const int WM_BOTTOMRIGHT = 17;
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (ShowDragStretch && WindowState == FormWindowState.Normal && m.Msg == 0x0084)
+            {
+                Point vPoint = new Point((int)m.LParam & 0xFFFF, (int)m.LParam >> 16 & 0xFFFF);
+                vPoint = PointToClient(vPoint);
+                int dragSize = 5;
+                if (vPoint.X <= dragSize)
+                {
+                    if (vPoint.Y <= dragSize)
+                        m.Result = (IntPtr)WM_TOPLEFT;
+                    else if (vPoint.Y >= ClientSize.Height - dragSize)
+                        m.Result = (IntPtr)WM_BOTTOMLEFT;
+                    else m.Result = (IntPtr)WM_LEFT;
+                }
+                else if (vPoint.X >= ClientSize.Width - dragSize)
+                {
+                    if (vPoint.Y <= dragSize)
+                        m.Result = (IntPtr)WM_TOPRIGHT;
+                    else if (vPoint.Y >= ClientSize.Height - dragSize)
+                        m.Result = (IntPtr)WM_BOTTOMRIGHT;
+                    else m.Result = (IntPtr)WM_RIGHT;
+                }
+                else if (vPoint.Y <= dragSize)
+                {
+                    m.Result = (IntPtr)WM_TOP;
+                }
+                else if (vPoint.Y >= ClientSize.Height - dragSize)
+                {
+                    m.Result = (IntPtr)WM_BOTTOM;
+                }
+            }
+        }
+        #endregion
     }
 }

@@ -17,11 +17,12 @@
  * 创建日期: 2020-05-29
  *
  * 2020-05-29: V2.2.5 增加文件
+ * 2020-08-07: V2.2.7 可编辑输入
+ * 2020-09-16: V2.2.7 更改滚轮选择时间的方向
 ******************************************************************************/
 
 using System;
 using System.ComponentModel;
-using System.Windows.Forms;
 
 namespace Sunny.UI
 {
@@ -36,7 +37,6 @@ namespace Sunny.UI
             //
             // UITimePicker
             //
-            this.DropDownStyle = Sunny.UI.UIDropDownStyle.DropDownList;
             this.Name = "UITimePicker";
             this.Padding = new System.Windows.Forms.Padding(0, 0, 30, 0);
             this.SymbolDropDown = 61555;
@@ -50,6 +50,39 @@ namespace Sunny.UI
         {
             InitializeComponent();
             Value = DateTime.Now;
+
+            EditorLostFocus += UIDatePicker_LostFocus;
+            TextChanged += UIDatePicker_TextChanged;
+            MaxLength = 8;
+        }
+
+        private void UIDatePicker_TextChanged(object sender, EventArgs e)
+        {
+            if (Text.Length == MaxLength)
+            {
+                try
+                {
+                    DateTime dt = (DateTime.Now.DateString() + " " + Text).ToDateTime(DateTimeEx.DateFormat + " " + timeFormat);
+                    Value = dt;
+                }
+                catch
+                {
+                    Value = DateTime.Now.Date;
+                }
+            }
+        }
+
+        private void UIDatePicker_LostFocus(object sender, EventArgs e)
+        {
+            try
+            {
+                DateTime dt = (DateTime.Now.DateString() + " " + Text).ToDateTime(DateTimeEx.DateFormat + " " + timeFormat);
+                Value = dt;
+            }
+            catch
+            {
+                Value = DateTime.Now.Date;
+            }
         }
 
         public delegate void OnDateTimeChanged(object sender, DateTime value);
@@ -71,6 +104,7 @@ namespace Sunny.UI
             ItemForm = new UIDropDown(item);
         }
 
+        [Description("选中时间"), Category("SunnyUI")]
         public DateTime Value
         {
             get => item.Time;
@@ -83,7 +117,7 @@ namespace Sunny.UI
 
         private string timeFormat = "HH:mm:ss";
 
-        [Description("时间格式化掩码"), Category("自定义")]
+        [Description("时间格式化掩码"), Category("SunnyUI")]
         [DefaultValue("HH:mm:ss")]
         public string TimeFormat
         {
@@ -92,6 +126,7 @@ namespace Sunny.UI
             {
                 timeFormat = value;
                 Text = Value.ToString(timeFormat);
+                MaxLength = timeFormat.Length;
             }
         }
 

@@ -18,6 +18,7 @@
  *
  * 2020-01-01: V2.2.0 增加文件说明
  * 2020-04-25: V2.2.4 更新主题配置类
+ * 2020-08-14: V2.2.7 增加字体调整
 ******************************************************************************/
 
 using System;
@@ -37,11 +38,18 @@ namespace Sunny.UI
             ShowText = false;
         }
 
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            if (pnlValue != null) pnlValue.Font = Font;
+        }
+
         public event OnValueChanged ValueChanged;
 
         private double _value = 0;
 
         [DefaultValue(0)]
+        [Description("选中数值"), Category("SunnyUI")]
         public double Value
         {
             get => _value;
@@ -55,11 +63,13 @@ namespace Sunny.UI
         }
 
         [DefaultValue(1)]
+        [Description("小数位数"), Category("SunnyUI")]
         public int Decimal { get; set; } = 1;
 
         private double step = 0.1;
 
         [DefaultValue(0.1)]
+        [Description("步进值"), Category("SunnyUI")]
         public double Step
         {
             get => step;
@@ -83,6 +93,7 @@ namespace Sunny.UI
         private double _minimum = double.MinValue;
 
         [DefaultValue(double.MaxValue)]
+        [Description("最大值"), Category("SunnyUI")]
         public double Maximum
         {
             get => _maximum;
@@ -98,6 +109,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(double.MinValue)]
+        [Description("最小值"), Category("SunnyUI")]
         public double Minimum
         {
             get => _minimum;
@@ -133,6 +145,7 @@ namespace Sunny.UI
         private bool hasMinimum;
 
         [DefaultValue(false)]
+        [Description("检查最大值"), Category("SunnyUI")]
         public bool HasMaximum
         {
             get => hasMaximum;
@@ -148,6 +161,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(false)]
+        [Description("检查最小值"), Category("SunnyUI")]
         public bool HasMinimum
         {
             get => hasMinimum;

@@ -17,6 +17,7 @@
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
+ * 2020-08-14: V2.2.7 增加左右列表项个数变化事件
 ******************************************************************************/
 
 using System;
@@ -39,8 +40,23 @@ namespace Sunny.UI
         {
             InitializeComponent();
             ShowText = false;
+
+            l1.ItemsCountChange += L1_ItemsCountChange;
+            l2.ItemsCountChange += L2_ItemsCountChange;
         }
 
+        private void L2_ItemsCountChange(object sender, EventArgs e)
+        {
+            ItemsRightCountChange?.Invoke(sender, e);
+        }
+
+        private void L1_ItemsCountChange(object sender, EventArgs e)
+        {
+            ItemsLeftCountChange?.Invoke(sender, e);
+        }
+
+        public event EventHandler ItemsLeftCountChange;
+        public event EventHandler ItemsRightCountChange;
         /// <summary>
         /// 左侧列表
         /// </summary>
@@ -48,7 +64,7 @@ namespace Sunny.UI
         [Localizable(true)]
         [Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
         [MergableProperty(false)]
-        [Description("左侧列表")]
+        [Description("左侧列表"), Category("SunnyUI")]
         public ListBox.ObjectCollection ItemsLeft => l1.Items;
 
         /// <summary>
@@ -58,7 +74,7 @@ namespace Sunny.UI
         [Localizable(true)]
         [Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", typeof(UITypeEditor))]
         [MergableProperty(false)]
-        [Description("右侧列表")]
+        [Description("右侧列表"), Category("SunnyUI")]
         public ListBox.ObjectCollection ItemsRight => l2.Items;
 
         private void b1_Click(object sender, EventArgs e)

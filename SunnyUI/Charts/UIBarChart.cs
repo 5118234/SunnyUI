@@ -1,4 +1,26 @@
-﻿using System;
+﻿/******************************************************************************
+ * SunnyUI 开源控件库、工具类库、扩展类库、多页面开发框架。
+ * CopyRight (C) 2012-2020 ShenYongHua(沈永华).
+ * QQ群：56829229 QQ：17612584 EMail：SunnyUI@qq.com
+ *
+ * Blog:   https://www.cnblogs.com/yhuse
+ * Gitee:  https://gitee.com/yhuse/SunnyUI
+ * GitHub: https://github.com/yhuse/SunnyUI
+ *
+ * SunnyUI.dll can be used for free under the GPL-3.0 license.
+ * If you use this code, please keep this note.
+ * 如果您使用此代码，请保留此说明。
+ ******************************************************************************
+ * 文件名称: UIBarChart.cs
+ * 文件说明: 柱状图
+ * 当前版本: V2.2
+ * 创建日期: 2020-06-06
+ *
+ * 2020-06-06: V2.2.5 增加文件说明
+ * 2020-08-21: V2.2.7 可设置柱状图最小宽度
+******************************************************************************/
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,12 +101,15 @@ namespace Sunny.UI
                 float barX = DrawOrigin.X;
                 var series = o.Series[i];
                 Bars.TryAdd(i, new List<BarInfo>());
-
                 for (int j = 0; j < series.Data.Count; j++)
                 {
                     Color color = ChartStyle.GetColor(i);
                     if (series.Colors.Count > 0 && j >= 0 && j < series.Colors.Count)
                         color = series.Colors[j];
+
+                    float xx = barX + x1 * (i + 1) + x2 * i + x1;
+                    float ww = Math.Min(x2, series.MaxWidth);
+                    xx = xx - ww / 2.0f;
 
                     if (YAxisStart >= 0)
                     {
@@ -92,10 +117,7 @@ namespace Sunny.UI
 
                         Bars[i].Add(new BarInfo()
                         {
-                            Rect = new RectangleF(
-                                barX + x1 * (i + 1) + x2 * i,
-                                DrawOrigin.Y - h,
-                                x2, h),
+                            Rect = new RectangleF(xx, DrawOrigin.Y - h, ww, h),
                             Color = color
                         });
                     }
@@ -104,10 +126,7 @@ namespace Sunny.UI
                         float h = Math.Abs((float)(DrawSize.Height * (end * interval - series.Data[j]) / ((end - start) * interval)));
                         Bars[i].Add(new BarInfo()
                         {
-                            Rect = new RectangleF(
-                                barX + x1 * (i + 1) + x2 * i,
-                                BarOption.Grid.Top + 1,
-                                x2, h - 1),
+                            Rect = new RectangleF(xx, BarOption.Grid.Top + 1, ww, h - 1),
                             Color = color
                         });
                     }
@@ -134,10 +153,7 @@ namespace Sunny.UI
                             float h = Math.Abs((float)(highH * series.Data[j] / highV));
                             Bars[i].Add(new BarInfo()
                             {
-                                Rect = new RectangleF(
-                                    barX + x1 * (i + 1) + x2 * i,
-                                    DrawOrigin.Y - lowH - h,
-                                    x2, h),
+                                Rect = new RectangleF(xx, DrawOrigin.Y - lowH - h, ww, h),
                                 Color = color
                             });
                         }
@@ -146,10 +162,7 @@ namespace Sunny.UI
                             float h = Math.Abs((float)(lowH * series.Data[j] / lowV));
                             Bars[i].Add(new BarInfo()
                             {
-                                Rect = new RectangleF(
-                                    barX + x1 * (i + 1) + x2 * i,
-                                    DrawOrigin.Y - lowH + 1,
-                                    x2, h - 1),
+                                Rect = new RectangleF(xx, DrawOrigin.Y - lowH + 1, ww, h - 1),
                                 Color = color
                             });
                         }
@@ -465,7 +478,7 @@ namespace Sunny.UI
                 if (line.Left == UILeftAlignment.Center)
                     g.DrawString(line.Name, SubFont, line.Color, DrawOrigin.X + (Width - BarOption.Grid.Left - BarOption.Grid.Right - sf.Width) / 2, pos - 2 - sf.Height);
                 if (line.Left == UILeftAlignment.Right)
-                    g.DrawString(line.Name, SubFont, line.Color, Width - sf.Width - 4, pos - 2 - sf.Height);
+                    g.DrawString(line.Name, SubFont, line.Color, Width - sf.Width - 4 - BarOption.Grid.Right, pos - 2 - sf.Height);
             }
         }
 

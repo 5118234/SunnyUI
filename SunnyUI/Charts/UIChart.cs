@@ -17,6 +17,7 @@
  * 创建日期: 2020-06-06
  *
  * 2020-06-06: V2.2.5 增加文件说明
+ * 2020-09-10: V2.2.7 增加图表的边框线颜色设置
 ******************************************************************************/
 
 using System;
@@ -88,7 +89,7 @@ namespace Sunny.UI
         ///     字体颜色
         /// </summary>
         [Description("字体颜色")]
-        [Category("自定义")]
+        [Category("SunnyUI")]
         [DefaultValue(typeof(Color), "White")]
         public override Color ForeColor
         {
@@ -97,10 +98,21 @@ namespace Sunny.UI
         }
 
         /// <summary>
+        /// 边框颜色
+        /// </summary>
+        [Description("边框颜色"), Category("SunnyUI")]
+        [DefaultValue(typeof(Color), "80, 160, 255")]
+        public Color RectColor
+        {
+            get => rectColor;
+            set => SetRectColor(value);
+        }
+
+        /// <summary>
         ///     填充颜色，当值为背景色或透明色或空值则不填充
         /// </summary>
         [Description("填充颜色")]
-        [Category("自定义")]
+        [Category("SunnyUI")]
         [DefaultValue(typeof(Color), "235, 243, 255")]
         public Color FillColor
         {

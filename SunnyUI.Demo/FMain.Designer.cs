@@ -45,16 +45,19 @@
             this.Aside.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
             this.Aside.ItemHeight = 36;
             this.Aside.LineColor = System.Drawing.Color.Black;
+            this.Aside.Location = new System.Drawing.Point(2, 145);
             this.Aside.MenuStyle = Sunny.UI.UIMenuStyle.Black;
             this.Aside.ShowOneNode = true;
             this.Aside.ShowTips = true;
-            this.Aside.Size = new System.Drawing.Size(250, 575);
+            this.Aside.Size = new System.Drawing.Size(250, 573);
             this.Aside.Style = Sunny.UI.UIStyle.Custom;
             // 
             // Header
             // 
             this.Header.Controls.Add(this.uiAvatar);
             this.Header.Controls.Add(this.uiLogo1);
+            this.Header.Location = new System.Drawing.Point(2, 35);
+            treeNode1.ImageIndex = 1;
             treeNode1.Name = "节点0";
             treeNode1.Text = "控件";
             treeNode2.Name = "节点1";
@@ -69,7 +72,7 @@
             treeNode3,
             treeNode4});
             this.Header.SelectedIndex = 0;
-            this.Header.Size = new System.Drawing.Size(1024, 110);
+            this.Header.Size = new System.Drawing.Size(1020, 110);
             this.Header.Style = Sunny.UI.UIStyle.Custom;
             this.Header.MenuItemClick += new Sunny.UI.UINavBar.OnMenuItemClick(this.Header_MenuItemClick);
             // 
@@ -89,7 +92,7 @@
             // 
             this.uiAvatar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.uiAvatar.Font = new System.Drawing.Font("微软雅黑", 12F);
-            this.uiAvatar.Location = new System.Drawing.Point(943, 25);
+            this.uiAvatar.Location = new System.Drawing.Point(939, 25);
             this.uiAvatar.Name = "uiAvatar";
             this.uiAvatar.Size = new System.Drawing.Size(66, 70);
             this.uiAvatar.TabIndex = 4;
@@ -102,8 +105,10 @@
             this.ClientSize = new System.Drawing.Size(1024, 720);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FMain";
+            this.Padding = new System.Windows.Forms.Padding(2, 35, 2, 2);
+            this.ShowDragStretch = true;
+            this.ShowRadius = false;
             this.Text = "SunnyUI.Net";
-            this.WindowStateChange += new Sunny.UI.UIForm.OnWindowStateChange(this.FMain_WindowStateChange);
             this.Header.ResumeLayout(false);
             this.ResumeLayout(false);
 

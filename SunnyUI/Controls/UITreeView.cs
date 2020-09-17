@@ -18,6 +18,7 @@
  *
  * 2020-05-05: V2.2.5 增加文件
  * 2020-07-07: V2.2.6 全部重写，增加圆角，CheckBoxes等
+ * 2020-08-12: V2.2.7 更新可设置背景色
 ******************************************************************************/
 
 using System;
@@ -89,7 +90,14 @@ namespace Sunny.UI
             if (view != null)
             {
                 view.FillColor = color;
+                view.BackColor = color;
             }
+        }
+
+        protected override void AfterSetForeColor(Color color)
+        {
+            base.AfterSetForeColor(color);
+            view.ForeColor = color;
         }
 
         [DefaultValue(TreeViewDrawMode.OwnerDrawAll)]
@@ -490,7 +498,6 @@ namespace Sunny.UI
             //
             view.BackColor = Color.White;
             view.BorderStyle = BorderStyle.None;
-            view.CheckBoxes = true;
             view.DrawMode = TreeViewDrawMode.OwnerDrawAll;
             view.ForeColor = Color.FromArgb(48, 48, 48);
             view.FullRowSelect = true;
@@ -617,7 +624,7 @@ namespace Sunny.UI
             {
                 base.OnDrawNode(e);
 
-                if (e.Node==null) return;
+                if (e.Node == null) return;
 
                 if (BorderStyle == BorderStyle.Fixed3D) BorderStyle = BorderStyle.FixedSingle;
 
@@ -629,7 +636,7 @@ namespace Sunny.UI
                 else
                 {
                     var drawLeft = (e.Node.Level + 1) * Indent + 3;
-                    var checkBoxLeft = (e.Node.Level + 1) * Indent + 3;
+                    var checkBoxLeft = (e.Node.Level + 1) * Indent + 1;
                     var imageLeft = drawLeft;
                     var haveImage = false;
                     var sf = e.Graphics.MeasureString(e.Node.Text, Font);

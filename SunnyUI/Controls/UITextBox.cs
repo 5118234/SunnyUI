@@ -18,6 +18,7 @@
  *
  * 2020-01-01: V2.2.0 增加文件说明
  * 2020-06-03: V2.2.5 增加多行，增加滚动条
+ * 2020-09-03: V2.2.7 增加FocusedSelectAll属性，激活时全选。
 ******************************************************************************/
 
 using System;
@@ -80,12 +81,20 @@ namespace Sunny.UI
 
         private void Edit_Leave(object sender, EventArgs e)
         {
-            Leave?.Invoke(sender,e);
+            Leave?.Invoke(sender, e);
+        }
+
+        [DefaultValue(false)]
+        [Description("激活时选中全部文字"), Category("SunnyUI")]
+        public bool FocusedSelectAll
+        {
+            get => edit.FocusedSelectAll;
+            set => edit.FocusedSelectAll = value;
         }
 
         private void UITextBox_TextAlignmentChange(object sender, ContentAlignment alignment)
         {
-            if (edit==null) return;
+            if (edit == null) return;
             if (alignment == ContentAlignment.TopLeft || alignment == ContentAlignment.MiddleLeft ||
                 alignment == ContentAlignment.BottomLeft)
                 edit.TextAlign = HorizontalAlignment.Left;
@@ -101,7 +110,7 @@ namespace Sunny.UI
 
         private void Edit_DoubleClick(object sender, EventArgs e)
         {
-            DoubleClick?.Invoke(this,e);
+            DoubleClick?.Invoke(this, e);
         }
 
         public new event EventHandler DoubleClick;
@@ -109,7 +118,7 @@ namespace Sunny.UI
 
         private void Edit_Click(object sender, EventArgs e)
         {
-            Click?.Invoke(this,e);
+            Click?.Invoke(this, e);
         }
 
         protected override void OnCursorChanged(EventArgs e)
@@ -129,6 +138,10 @@ namespace Sunny.UI
         private void Edit_MouseEnter(object sender, EventArgs e)
         {
             Cursor = editCursor;
+            if (FocusedSelectAll)
+            {
+                SelectAll();
+            }
         }
 
         private void OnMouseWheel(object sender, MouseEventArgs e)
@@ -191,6 +204,7 @@ namespace Sunny.UI
 
         public void Select(int start, int length)
         {
+            edit.Focus();
             edit.Select(start, length);
         }
 
@@ -222,6 +236,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(null)]
+        [Description("水印文字"), Category("SunnyUI")]
         public string Watermark
         {
             get => edit.Watermark;
@@ -230,6 +245,7 @@ namespace Sunny.UI
 
         public void SelectAll()
         {
+            edit.Focus();
             edit.SelectAll();
         }
 
@@ -247,7 +263,7 @@ namespace Sunny.UI
 
         public new event KeyPressEventHandler KeyPress;
 
-        public new event EventHandler Leave; 
+        public new event EventHandler Leave;
 
         private void EditTextChanged(object s, EventArgs e)
         {
@@ -345,6 +361,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue('\0')]
+        [Description("密码掩码"), Category("SunnyUI")]
         public char PasswordChar
         {
             get => edit.PasswordChar;
@@ -352,6 +369,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(false)]
+        [Description("是否只读"), Category("SunnyUI")]
         public bool ReadOnly
         {
             get => edit.ReadOnly;
@@ -362,7 +380,7 @@ namespace Sunny.UI
             }
         }
 
-        [Description("输入类型"), Category("自定义")]
+        [Description("输入类型"), Category("SunnyUI")]
         [DefaultValue(UIEditType.String)]
         public UIEditType Type
         {
@@ -373,7 +391,7 @@ namespace Sunny.UI
         /// <summary>
         /// 当InputType为数字类型时，能输入的最大值
         /// </summary>
-        [Description("当InputType为数字类型时，能输入的最大值。")]
+        [Description("当InputType为数字类型时，能输入的最大值。"), Category("SunnyUI")]
         [DefaultValue(int.MaxValue)]
         public double Maximum
         {
@@ -384,7 +402,7 @@ namespace Sunny.UI
         /// <summary>
         /// 当InputType为数字类型时，能输入的最小值
         /// </summary>
-        [Description("当InputType为数字类型时，能输入的最小值。")]
+        [Description("当InputType为数字类型时，能输入的最小值。"), Category("SunnyUI")]
         [DefaultValue(int.MinValue)]
         public double Minimum
         {
@@ -393,6 +411,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(false)]
+        [Description("是否判断最大值显示"), Category("SunnyUI")]
         public bool HasMaximum
         {
             get => edit.HasMaxValue;
@@ -400,6 +419,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(false)]
+        [Description("是否判断最小值显示"), Category("SunnyUI")]
         public bool HasMinimum
         {
             get => edit.HasMinValue;
@@ -407,6 +427,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(0.00)]
+        [Description("浮点返回值"), Category("SunnyUI")]
         public double DoubleValue
         {
             get => edit.DoubleValue;
@@ -414,13 +435,15 @@ namespace Sunny.UI
         }
 
         [DefaultValue(0)]
+        [Description("整形返回值"), Category("SunnyUI")]
         public int IntValue
         {
             get => edit.IntValue;
             set => edit.IntValue = value;
         }
 
-        [CategoryAttribute("文字"), Browsable(true)]
+        [Description("文本返回值"), Category("SunnyUI")]
+        [Browsable(true)]
         [DefaultValue("")]
         public override string Text
         {
@@ -432,7 +455,7 @@ namespace Sunny.UI
         /// 当InputType为数字类型时，小数位数。
         /// </summary>
         [Description("当InputType为数字类型时，小数位数。")]
-        [DefaultValue(2)]
+        [DefaultValue(2), Category("SunnyUI")]
         public int DecLength
         {
             get => edit.DecLength;
@@ -440,6 +463,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(false)]
+        [Description("整形或浮点输入时，是否可空显示"), Category("SunnyUI")]
         public bool CanEmpty
         {
             get => edit.CanEmpty;

@@ -17,6 +17,7 @@
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
+ * 2020-08-28: V2.2.7 增加节点的Image绘制
 ******************************************************************************/
 
 using System;
@@ -57,6 +58,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(null)]
+        [Description("关联的TabControl"), Category("SunnyUI")]
         public UITabControl TabControl { get; set; }
 
         public void SetNodeItem(TreeNode node, NavMenuItem item)
@@ -84,12 +86,17 @@ namespace Sunny.UI
             node.ImageIndex = imageIndex;
         }
 
+        /// <summary>
+        /// Tag字符串
+        /// </summary>
         [DefaultValue(null)]
+        [Description("获取或设置包含有关控件的数据的对象字符串"), Category("SunnyUI")]
         public string TagString { get; set; }
 
         private UIMenuStyle _menuStyle = UIMenuStyle.Black;
 
         [DefaultValue(UIMenuStyle.Black)]
+        [Description("导航栏主题风格"), Category("SunnyUI")]
         public UIMenuStyle MenuStyle
         {
             get => _menuStyle;
@@ -109,7 +116,7 @@ namespace Sunny.UI
         /// <summary>
         /// 字体颜色
         /// </summary>
-        [Description("字体颜色"), Category("自定义")]
+        [Description("字体颜色"), Category("SunnyUI")]
         [DefaultValue(typeof(Color), "Silver")]
         public override Color ForeColor
         {
@@ -133,6 +140,7 @@ namespace Sunny.UI
         private Color backColor = Color.FromArgb(56, 56, 56);
 
         [DefaultValue(typeof(Color), "56, 56, 56")]
+        [Description("背景颜色"), Category("SunnyUI")]
         public override Color BackColor
         {
             get => backColor;
@@ -156,6 +164,7 @@ namespace Sunny.UI
         private Color menuHoverColor = Color.FromArgb(76, 76, 76);
 
         [DefaultValue(typeof(Color), "76, 76, 76")]
+        [Description("菜单栏鼠标移上颜色"), Category("SunnyUI")]
         public Color MenuHoverColor
         {
             get => menuHoverColor;
@@ -171,7 +180,7 @@ namespace Sunny.UI
         /// <summary>
         /// 边框颜色
         /// </summary>
-        [Description("选中Tab页高亮"), Category("自定义")]
+        [Description("选中Tab页高亮"), Category("SunnyUI")]
         [DefaultValue(typeof(Color), "80, 160, 255")]
         public Color SelectedHighColor
 
@@ -187,7 +196,10 @@ namespace Sunny.UI
 
         private UIStyle _style = UIStyle.Blue;
 
-        [DefaultValue(UIStyle.Blue)]
+        /// <summary>
+        /// 主题样式
+        /// </summary>
+        [DefaultValue(UIStyle.Blue), Description("主题样式"), Category("SunnyUI")]
         public UIStyle Style
         {
             get => _style;
@@ -202,9 +214,11 @@ namespace Sunny.UI
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         [Localizable(true)]
         [MergableProperty(false)]
+        [Description("菜单栏显示节点集合"), Category("SunnyUI")]
         public TreeNodeCollection Nodes => Menu.Nodes;
 
         [DefaultValue(null)]
+        [Description("图片列表"), Category("SunnyUI")]
         public ImageList ImageList
         {
             get => Menu.ImageList;
@@ -212,6 +226,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(null)]
+        [Description("下拉菜单图片列表"), Category("SunnyUI")]
         public ImageList DropMenuImageList
         {
             get => NavBarMenu.ImageList;
@@ -221,6 +236,7 @@ namespace Sunny.UI
         private StringAlignment nodeAlignment = StringAlignment.Far;
 
         [DefaultValue(StringAlignment.Far)]
+        [Description("显示节点位置"), Category("SunnyUI")]
         public StringAlignment NodeAlignment
         {
             get => nodeAlignment;
@@ -240,6 +256,7 @@ namespace Sunny.UI
         private readonly NavMenuHelper MenuHelper = new NavMenuHelper();
 
         [DefaultValue(-1)]
+        [Description("选中菜单索引"), Category("SunnyUI")]
         public int SelectedIndex
         {
             get => selectedIndex;
@@ -264,6 +281,7 @@ namespace Sunny.UI
         private Color selectedForeColor = UIColor.Blue;
 
         [DefaultValue(typeof(Color), "80, 160, 255")]
+        [Description("选中菜单字体颜色"), Category("SunnyUI")]
         public Color SelectedForeColor
         {
             get => selectedForeColor;
@@ -306,8 +324,14 @@ namespace Sunny.UI
                 Rectangle rect = new Rectangle(NodeX + i * NodeSize.Width, NodeY, NodeSize.Width, NodeSize.Height);
 
                 TreeNode node = Nodes[i];
+
+                int symbolSize = 0;
+                if (ImageList != null && ImageList.Images.Count > 0 && node.ImageIndex >= 0 && node.ImageIndex >= 0 && node.ImageIndex < ImageList.Images.Count)
+                    symbolSize = ImageList.ImageSize.Width;
+
                 int symbol = MenuHelper.GetSymbol(node);
-                int symbolSize = MenuHelper.GetSymbolSize(node);
+                if (symbol > 0)
+                    symbolSize = MenuHelper.GetSymbolSize(node);
 
                 SizeF sf = e.Graphics.MeasureString(node.Text, Font);
                 Color textColor = ForeColor;
@@ -328,9 +352,19 @@ namespace Sunny.UI
                     textColor = SelectedForeColor;
                 }
 
-                if (symbol > 0)
+                if (symbolSize > 0)
                 {
-                    e.Graphics.DrawFontImage(symbol, symbolSize, textColor, new RectangleF(NodeX + i * NodeSize.Width + (NodeSize.Width - sf.Width - symbolSize) / 2.0f, NodeY, symbolSize, NodeSize.Height));
+                    if (symbol > 0)
+                    {
+                        e.Graphics.DrawFontImage(symbol, symbolSize, textColor, new RectangleF(NodeX + i * NodeSize.Width + (NodeSize.Width - sf.Width - symbolSize) / 2.0f, NodeY, symbolSize, NodeSize.Height));
+
+                    }
+                    else
+                    {
+                        if (ImageList != null)
+                            e.Graphics.DrawImage((Bitmap)ImageList.Images[node.ImageIndex], NodeX + i * NodeSize.Width + (NodeSize.Width - sf.Width - symbolSize) / 2.0f, NodeY + (NodeSize.Height - ImageList.ImageSize.Height) / 2);
+                    }
+
                     e.Graphics.DrawString(node.Text, Font, textColor, NodeX + i * NodeSize.Width + (NodeSize.Width - sf.Width + symbolSize) / 2.0f, NodeY + (NodeSize.Height - sf.Height) / 2);
                 }
                 else
@@ -356,6 +390,7 @@ namespace Sunny.UI
         private int _nodeInterval = 100;
 
         [DefaultValue(100)]
+        [Description("显示菜单边距"), Category("SunnyUI")]
         public int NodeInterval
         {
             get => _nodeInterval;
@@ -372,6 +407,7 @@ namespace Sunny.UI
         private Size nodeSize = new Size(130, 45);
 
         [DefaultValue(typeof(Size), "130, 45")]
+        [Description("显示菜单大小"), Category("SunnyUI")]
         public Size NodeSize
         {
             get => nodeSize;
@@ -513,7 +549,11 @@ namespace Sunny.UI
             Invalidate();
         }
 
+        /// <summary>
+        /// 自定义主题风格
+        /// </summary>
         [DefaultValue(false)]
+        [Description("获取或设置可以自定义主题风格"), Category("SunnyUI")]
         public bool StyleCustomMode { get; set; }
 
         public string Version { get; }

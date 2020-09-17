@@ -17,6 +17,7 @@
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
+ * 2020-08-07: V2.2.7 可编辑输入，日期范围控制以防止出错
 ******************************************************************************/
 
 using System;
@@ -35,6 +36,38 @@ namespace Sunny.UI
         {
             InitializeComponent();
             Value = DateTime.Now;
+            MaxLength = 10;
+            EditorLostFocus += UIDatePicker_LostFocus;
+            TextChanged += UIDatePicker_TextChanged;
+        }
+
+        private void UIDatePicker_TextChanged(object sender, EventArgs e)
+        {
+            if (Text.Length == MaxLength)
+            {
+                try
+                {
+                    DateTime dt = Text.ToDateTime(DateFormat);
+                    Value = dt;
+                }
+                catch
+                {
+                    Value = DateTime.Now.Date;
+                }
+            }
+        }
+
+        private void UIDatePicker_LostFocus(object sender, EventArgs e)
+        {
+            try
+            {
+                DateTime dt = Text.ToDateTime(DateFormat);
+                Value = dt;
+            }
+            catch
+            {
+                Value = DateTime.Now.Date;
+            }
         }
 
         public event OnDateTimeChanged ValueChanged;
@@ -54,11 +87,14 @@ namespace Sunny.UI
             ItemForm = new UIDropDown(item);
         }
 
+        [Description("选中日期"), Category("SunnyUI")]
         public DateTime Value
         {
             get => item.Date;
             set
             {
+                if (value < new DateTime(1753, 1, 1))
+                    value = new DateTime(1753, 1, 1);
                 Text = value.ToString(dateFormat);
                 item.Date = value;
             }
@@ -72,7 +108,7 @@ namespace Sunny.UI
 
         private string dateFormat = "yyyy-MM-dd";
 
-        [Description("日期格式化掩码"), Category("自定义")]
+        [Description("日期格式化掩码"), Category("SunnyUI")]
         [DefaultValue("yyyy-MM-dd")]
         public string DateFormat
         {
@@ -81,6 +117,7 @@ namespace Sunny.UI
             {
                 dateFormat = value;
                 Text = Value.ToString(dateFormat);
+                MaxLength = dateFormat.Length;
             }
         }
     }
