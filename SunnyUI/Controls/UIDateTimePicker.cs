@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIDatetimePicker.cs
  * 文件说明: 日期时间选择框
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -48,11 +48,16 @@ namespace Sunny.UI
 
         }
 
+        [DefaultValue(false)]
+        [Description("日期输入时，是否可空显示"), Category("SunnyUI")]
+        public bool CanEmpty { get; set; }
+
         public UIDatetimePicker()
         {
             InitializeComponent();
-            Width = 200;
             Value = DateTime.Now;
+            Text = Value.ToString(DateFormat);
+            Width = 200;
             EditorLostFocus += UIDatePicker_LostFocus;
             TextChanged += UIDatePicker_TextChanged;
             MaxLength = 19;
@@ -76,6 +81,11 @@ namespace Sunny.UI
 
         private void UIDatePicker_LostFocus(object sender, EventArgs e)
         {
+            if (Text.IsNullOrEmpty())
+            {
+                if (CanEmpty) return;
+            }
+
             try
             {
                 DateTime dt = Text.ToDateTime(DateFormat);
@@ -113,8 +123,8 @@ namespace Sunny.UI
             get => item.Date;
             set
             {
-                if (value < new DateTime(1753, 1, 1))
-                    value = new DateTime(1753, 1, 1);
+                if (value < DateTimeEx.Jan1st1970)
+                    value = DateTimeEx.Jan1st1970;
                 Text = value.ToString(dateFormat);
                 item.Date = value;
             }

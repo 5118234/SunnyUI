@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UDir.cs
  * 文件说明: 目录扩展类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -33,21 +33,12 @@ namespace Sunny.UI
     public static class DirEx
     {
         /// <summary>
-        /// 处理文件夹名称末尾加反斜杠\
-        /// </summary>
-        /// <param name="dir">文件夹名称</param>
-        /// <returns>结果</returns>
-        public static string DealPath(this string dir)
-        {
-            return dir.Right(1) == "\\" ? dir : dir + "\\";
-        }
-
-        /// <summary>
-        /// 当前可执行文件路径，末尾包括\
+        /// 当前可执行文件路径，末尾包括文件夹分隔符(windows为\，linux为/)
         /// </summary>
         /// <returns>结果</returns>
         public static string CurrentDir()
         {
+            //return Environment.CurrentDirectory.DealPath();
             return AppDomain.CurrentDomain.BaseDirectory.DealPath();
         }
 
@@ -188,6 +179,52 @@ namespace Sunny.UI
             {
                 System.Diagnostics.Process.Start("Explorer.exe", dir);
             }
+        }
+
+        /// <summary>
+        /// 在指定目录下创建以年月日分级的子目录，末尾包括\
+        /// </summary>
+        /// <param name="dt">日期</param>
+        /// <param name="path">文件夹</param>
+        /// <param name="createIfNotExist">不存在是否创建</param>
+        /// <returns>文件夹名</returns>
+        public static string YearMonthDayFolder(this DateTime dt, string path, bool createIfNotExist = false)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                return path;
+            }
+
+            string result = path.DealPath() + dt.YearString() + "\\" + dt.YearMonthString() + "\\" + dt.DateString() + "\\";
+            if (createIfNotExist)
+            {
+                DirEx.CreateDir(result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 在指定目录下创建以年月分级的子目录，末尾包括\
+        /// </summary>
+        /// <param name="dt">日期</param>
+        /// <param name="path">文件夹</param>
+        /// <param name="createIfNotExist">不存在是否创建</param>
+        /// <returns>文件夹名</returns>
+        public static string YearMonthFolder(this DateTime dt, string path, bool createIfNotExist = false)
+        {
+            if (path.IsNullOrEmpty())
+            {
+                return path;
+            }
+
+            string result = path.DealPath() + dt.YearString() + "\\" + dt.YearMonthString() + "\\";
+            if (createIfNotExist)
+            {
+                DirEx.CreateDir(result);
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UITextBox.cs
  * 文件说明: 输入框
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -82,6 +82,18 @@ namespace Sunny.UI
         private void Edit_Leave(object sender, EventArgs e)
         {
             Leave?.Invoke(sender, e);
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            edit.BackColor = Enabled ? Color.White : FillDisableColor;
+            edit.Enabled = Enabled;
+        }
+
+        public override bool Focused
+        {
+            get => edit.Focused;
         }
 
         [DefaultValue(false)]
@@ -330,11 +342,6 @@ namespace Sunny.UI
             }
             else
             {
-                if (Height < 69)
-                {
-                    Height = 69;
-                }
-
                 edit.Top = 3;
                 edit.Height = Height - 6;
                 edit.Left = 1;
@@ -376,7 +383,7 @@ namespace Sunny.UI
             set
             {
                 edit.ReadOnly = value;
-                edit.BackColor = Color.White;
+                edit.BackColor = Enabled ? Color.White : FillDisableColor;
             }
         }
 
@@ -495,7 +502,7 @@ namespace Sunny.UI
             base.SetStyleColor(uiColor);
             if (uiColor.IsCustom()) return;
 
-            edit.BackColor = fillColor = Color.White;
+            edit.BackColor = fillColor = Enabled ? Color.White : FillDisableColor;
             edit.ForeColor = foreColor = UIFontColor.Primary;
 
             if (bar != null)
@@ -518,7 +525,7 @@ namespace Sunny.UI
         protected override void AfterSetFillColor(Color color)
         {
             base.AfterSetFillColor(color);
-            edit.BackColor = color;
+            edit.BackColor = Enabled ? color : FillDisableColor;
         }
 
         public enum UIEditType

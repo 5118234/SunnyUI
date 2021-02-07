@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UThunder.cs
  * 文件说明: 迅雷下载帮助类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -56,6 +56,12 @@ namespace Sunny.UI
             timer.Interval = 1000;
             timer.Tick += Timer_Tick;
             timer.Start();
+        }
+
+        ~Thunder()
+        {
+            timer.Stop();
+            timer.Dispose();
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -320,7 +326,7 @@ namespace Sunny.UI
         private static extern bool XL_UnInit();
 
         [DllImport("xldl.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr XL_CreateTask([In]DownTaskParam stParam);
+        private static extern IntPtr XL_CreateTask([In] DownTaskParam stParam);
 
         [DllImport("xldl.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool XL_StartTask(IntPtr hTask);
@@ -358,7 +364,7 @@ namespace Sunny.UI
 
         [DllImport("xldl.dll", EntryPoint = "XL_QueryTaskInfoEx", CallingConvention = CallingConvention.Cdecl)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool XL_QueryTaskInfoEx(IntPtr hTask, [Out]DownTaskInfo stTaskInfo);
+        private static extern bool XL_QueryTaskInfoEx(IntPtr hTask, [Out] DownTaskInfo stTaskInfo);
 
         [DllImport("xldl.dll", EntryPoint = "XL_QueryTaskInfoEx", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr XL_CreateBTTask(DownBTTaskParam stParam);

@@ -13,11 +13,13 @@
  ******************************************************************************
  * 文件名称: UIAsideMainFrame.cs
  * 文件说明: 页面框架(Aside-Main)
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-05-05
  *
  * 2020-05-05: V2.2.5 页面框架(Aside-Main)
 ******************************************************************************/
+
+using System.Windows.Forms;
 
 namespace Sunny.UI
 {
@@ -31,6 +33,13 @@ namespace Sunny.UI
             MainTabControl.Parent = this;
             MainTabControl.BringToFront();
             Aside.TabControl = MainTabControl;
+        }
+
+        public override void SelectPage(int pageIndex)
+        {
+            base.SelectPage(pageIndex);
+            TreeNode node = Aside.GetTreeNode(pageIndex);
+            if (node != null) Aside.SelectedNode = node;
         }
     }
 }

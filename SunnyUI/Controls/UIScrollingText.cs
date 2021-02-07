@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIScrollingText.cs
  * 文件说明: 滚动文字
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-06-29
  *
  * 2020-06-29: V2.2.6 新增控件
@@ -56,6 +56,7 @@ namespace Sunny.UI
         ~UIScrollingText()
         {
             timer.Stop();
+            timer.Dispose();
         }
 
         [DefaultValue(200), Description("刷新间隔"), Category("SunnyUI")]

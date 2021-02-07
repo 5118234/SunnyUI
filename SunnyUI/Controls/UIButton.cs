@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIButton.cs
  * 文件说明: 按钮
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -150,6 +150,7 @@ namespace Sunny.UI
 
         private Color tipsColor = Color.Red;
 
+        [Description("角标文字颜色"), Category("SunnyUI")]
         [DefaultValue(typeof(Color), "Red")]
         public Color TipsColor
         {

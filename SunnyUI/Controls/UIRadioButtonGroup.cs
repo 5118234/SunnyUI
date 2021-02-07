@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UICheckBoxGroup.cs
  * 文件说明: 单选框组
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-04-19: V2.2.3 增加单元
@@ -167,6 +167,16 @@ namespace Sunny.UI
                     }
                 }
             }
+        }
+
+        public void SelectedNone()
+        {
+            foreach (var button in buttons)
+            {
+                button.Checked = false;
+            }
+
+            ListBox.SelectedIndex = -1;
         }
 
         private readonly List<UIRadioButton> buttons = new List<UIRadioButton>();

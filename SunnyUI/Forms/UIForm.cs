@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
  * SunnyUI 开源控件库、工具类库、扩展类库、多页面开发框架。
  * CopyRight (C) 2012-2020 ShenYongHua(沈永华).
  * QQ群：56829229 QQ：17612584 EMail：SunnyUI@qq.com
@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIForm.cs
  * 文件说明: 窗体基类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -28,7 +28,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Sunny.UI
@@ -39,10 +38,9 @@ namespace Sunny.UI
 
         public readonly Guid Guid = Guid.NewGuid();
 
-        private UIStatusForm statusForm;
-
         public UIForm()
         {
+            base.MaximumSize = new Size(Screen.PrimaryScreen.WorkingArea.Width, Screen.PrimaryScreen.WorkingArea.Height);//设置最大化尺寸
             InitializeComponent();
 
             if (this.Register())
@@ -50,18 +48,17 @@ namespace Sunny.UI
                 SetStyle(UIStyles.Style);
             }
 
-            base.SetStyle(
+            SetStyle(
                 ControlStyles.UserPaint |
                 ControlStyles.DoubleBuffer |
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.AllPaintingInWmPaint |
-                //ControlStyles.ResizeRedraw |
                 ControlStyles.SupportsTransparentBackColor, true);
             UpdateStyles();
 
             Version = UIGlobal.Version;
             FormBorderStyle = FormBorderStyle.None;
-            base.MaximumSize = ShowFullScreen ? Screen.PrimaryScreen.Bounds.Size : Screen.PrimaryScreen.WorkingArea.Size;
+            m_aeroEnabled = false;
         }
 
         //不显示FormBorderStyle属性
@@ -71,11 +68,7 @@ namespace Sunny.UI
         public new FormBorderStyle FormBorderStyle
         {
             get { return base.FormBorderStyle; }
-            set
-            {
-                base.FormBorderStyle = FormBorderStyle.None;
-                Console.WriteLine(value);
-            }
+            set { base.FormBorderStyle = FormBorderStyle.None; }
         }
 
         public void Render()
@@ -83,43 +76,8 @@ namespace Sunny.UI
             SetStyle(UIStyles.Style);
         }
 
-        /// <summary>
-        /// 显示进度窗口
-        /// </summary>
-        /// <param name="title">进度窗口的标题</param>
-        /// <param name="desc">进度窗口的描述</param>
-        /// <param name="max">最大进度值</param>
-        /// <param name="value">当前进度值</param>
-        public void ShowStatus(string title, string desc, int max = 100, int value = 0)
+        private void UIForm_Load(object sender, EventArgs e)
         {
-            StatusForm.Style = Style;
-            StatusForm.Show(title, desc, max, value);
-        }
-
-        public UIStatusForm StatusForm => statusForm ?? (statusForm = new UIStatusForm());
-
-        /// <summary>
-        /// 隐藏进度窗口
-        /// </summary>
-        public void HideStatus()
-        {
-            StatusForm.Hide();
-        }
-
-        /// <summary>
-        /// 使进度条按步长自增一次
-        /// </summary>
-        public void StatusStepIt()
-        {
-            StatusForm.StepIt();
-        }
-
-        [DefaultValue(null)]
-        [Browsable(false)]
-        public string StatusDescription
-        {
-            get => StatusForm?.Description;
-            set => StatusForm.Description = value;
         }
 
         protected override void OnBackColorChanged(EventArgs e)
@@ -280,11 +238,21 @@ namespace Sunny.UI
         {
         }
 
+        private bool showFullScreen;
+
         /// <summary>
         /// 是否以全屏模式进入最大化
         /// </summary>
-        [Description("是否以全屏模式进入最大化"), Category("WindowStyle"), DefaultValue(false)]
-        public bool ShowFullScreen { get; set; }
+        [Description("是否以全屏模式进入最大化"), Category("WindowStyle")]
+        public bool ShowFullScreen
+        {
+            get => showFullScreen;
+            set
+            {
+                showFullScreen = value;
+                base.MaximumSize = ShowFullScreen ? Screen.PrimaryScreen.Bounds.Size : Screen.PrimaryScreen.WorkingArea.Size;
+            }
+        }
 
         /// <summary>
         /// 标题栏高度
@@ -390,30 +358,6 @@ namespace Sunny.UI
             }
         }
 
-        [DllImport("gdi32.dll")]
-        public static extern int CreateRoundRectRgn(int x1, int y1, int x2, int y2, int x3, int y3);
-
-        [DllImport("user32.dll")]
-        public static extern int SetWindowRgn(IntPtr wnd, int hRgn, Boolean bRedraw);
-
-        [DllImport("gdi32.dll", EntryPoint = "DeleteObject", CharSet = CharSet.Ansi)]
-        public static extern int DeleteObject(int hObject);
-
-        /// <summary>
-        /// 设置窗体的圆角矩形
-        /// </summary>
-        /// <param name="form">需要设置的窗体</param>
-        /// <param name="rgnRadius">圆角矩形的半径</param>
-        public static void SetFormRoundRectRegion(Form form, int rgnRadius)
-        {
-            if (form != null && form.FormBorderStyle == FormBorderStyle.None)
-            {
-                int region = CreateRoundRectRgn(0, 0, form.Width + 1, form.Height + 1, rgnRadius, rgnRadius);
-                SetWindowRgn(form.Handle, region, true);
-                DeleteObject(region);
-            }
-        }
-
         protected bool IsDesignMode
         {
             get
@@ -472,7 +416,7 @@ namespace Sunny.UI
 
         protected override void OnMouseClick(MouseEventArgs e)
         {
-            if (FormBorderStyle == FormBorderStyle.None)
+            if (FormBorderStyle == FormBorderStyle.None && ShowTitle)
             {
                 if (InControlBox)
                 {
@@ -507,7 +451,7 @@ namespace Sunny.UI
         private void ShowMaximize(bool IsOnMoving = false)
         {
             Screen screen = Screen.FromPoint(MousePosition);
-            base.MaximumSize = ShowFullScreen ? Screen.PrimaryScreen.Bounds.Size : Screen.PrimaryScreen.WorkingArea.Size;
+            base.MaximumSize = ShowFullScreen ? screen.Bounds.Size : screen.WorkingArea.Size;
             if (WindowState == FormWindowState.Normal)
             {
                 size = Size;
@@ -517,7 +461,7 @@ namespace Sunny.UI
                 Height = ShowFullScreen ? screen.Bounds.Height : screen.WorkingArea.Height;
                 Left = screen.Bounds.Left;
                 Top = screen.Bounds.Top;
-                SetFormRoundRectRegion(this, 0);
+                GDIEx.SetFormRoundRectRegion(this, 0);
                 WindowState = FormWindowState.Maximized;
             }
             else if (WindowState == FormWindowState.Maximized)
@@ -533,7 +477,7 @@ namespace Sunny.UI
 
                 if (location.X == 0 && location.Y == 0) location = center;
                 Location = location;
-                SetFormRoundRectRegion(this, ShowRadius ? 5 : 0);
+                GDIEx.SetFormRoundRectRegion(this, ShowRadius ? 5 : 0);
                 WindowState = FormWindowState.Normal;
             }
 
@@ -917,7 +861,7 @@ namespace Sunny.UI
 
             e.Graphics.SetDefaultQuality();
 
-            if (ShowIcon && Icon != null)
+            if (ShowTitleIcon && Icon != null)
             {
                 e.Graphics.DrawImage(Icon.ToBitmap(), 6, (TitleHeight - 24) / 2, 24, 24);
             }
@@ -929,7 +873,21 @@ namespace Sunny.UI
             }
             else
             {
-                e.Graphics.DrawString(Text, Font, titleForeColor, 6 + (ShowIcon && Icon != null ? 26 : 0), (TitleHeight - sf.Height) / 2);
+                e.Graphics.DrawString(Text, Font, titleForeColor, 6 + (ShowTitleIcon && Icon != null ? 26 : 0), (TitleHeight - sf.Height) / 2);
+            }
+        }
+
+        private bool showTitleIcon = false;
+
+        [Description("显示标题栏图标"), Category("SunnyUI")]
+        [DefaultValue(false)]
+        public bool ShowTitleIcon
+        {
+            get => showTitleIcon;
+            set
+            {
+                showTitleIcon = value;
+                Invalidate();
             }
         }
 
@@ -1018,7 +976,6 @@ namespace Sunny.UI
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-
             CalcSystemBoxPos();
             SetRadius();
             isShow = true;
@@ -1036,7 +993,10 @@ namespace Sunny.UI
         [DefaultValue(true)]
         public bool ShowRadius
         {
-            get => _showRadius;
+            get
+            {
+                return (_showRadius && !_showShadow);
+            }
             set
             {
                 _showRadius = value;
@@ -1044,6 +1004,44 @@ namespace Sunny.UI
                 Invalidate();
             }
         }
+
+        /// <summary>
+        /// 是否显示阴影
+        /// </summary>
+        private bool _showShadow;
+
+        #region 边框阴影
+
+        /// <summary>
+        /// 是否显示阴影
+        /// </summary>
+        [Description("是否显示阴影"), Category("SunnyUI")]
+        [DefaultValue(false)]
+        public bool ShowShadow
+        {
+            get => _showShadow;
+            set
+            {
+                _showShadow = value;
+                Invalidate();
+            }
+        }
+
+        private bool m_aeroEnabled;
+
+        private bool CheckAeroEnabled()
+        {
+            if (Environment.OSVersion.Version.Major >= 6)
+            {
+                int enabled = 0;
+                Win32.Dwm.DwmIsCompositionEnabled(ref enabled);
+                return enabled == 1;
+            }
+
+            return false;
+        }
+
+        #endregion 边框阴影
 
         /// <summary>
         /// 是否重绘边框样式
@@ -1116,19 +1114,13 @@ namespace Sunny.UI
             return base.ProcessCmdKey(ref msg, keyData);   //其他键按默认处理
         }
 
-        [DllImport("user32.dll")]
-        private static extern bool ReleaseCapture();
-
-        [DllImport("user32.dll")]
-        private static extern bool SendMessage(IntPtr handle, int wMsg, int wParam, int lParam);
-
         /// <summary>
         /// 通过Windows的API控制窗体的拖动
         /// </summary>
         public static void MousePressMove(IntPtr handle)
         {
-            ReleaseCapture();
-            SendMessage(handle, 0x0112, 0xF010 + 0x0002, 0);
+            Win32.User.ReleaseCapture();
+            Win32.User.SendMessage(handle, Win32.User.WM_SYSCOMMAND, Win32.User.SC_MOVE + Win32.User.HTCAPTION, 0);
         }
 
         /// <summary>
@@ -1180,11 +1172,11 @@ namespace Sunny.UI
 
             if (WindowState == FormWindowState.Maximized)
             {
-                SetFormRoundRectRegion(this, 0);
+                GDIEx.SetFormRoundRectRegion(this, 0);
             }
             else
             {
-                SetFormRoundRectRegion(this, ShowRadius ? 5 : 0);
+                GDIEx.SetFormRoundRectRegion(this, ShowRadius ? 5 : 0);
             }
 
             Invalidate();
@@ -1220,21 +1212,29 @@ namespace Sunny.UI
         {
             get
             {
-                if (base.FormBorderStyle == FormBorderStyle.None)
+                m_aeroEnabled = CheckAeroEnabled();
+
+                CreateParams cp = base.CreateParams;
+                if (!m_aeroEnabled)
                 {
+                    cp.ClassStyle |= Win32.User.CS_DROPSHADOW;
+                }
+
+                if (FormBorderStyle == FormBorderStyle.None)
+                {
+                    // 当边框样式为FormBorderStyle.None时
                     // 点击窗体任务栏图标，可以进行最小化
-                    CreateParams cp = base.CreateParams;
-                    cp.Style |= 0x00020000;
+                    cp.Style = cp.Style | Win32.User.WS_MINIMIZEBOX;
                     return cp;
                 }
-                else
-                {
-                    return base.CreateParams;
-                }
+
+                cp.ExStyle |= 0x02000000;
+                return base.CreateParams;
             }
         }
 
         private bool showDragStretch;
+
         [Description("显示边框可拖拽调整窗体大小"), Category("SunnyUI"), DefaultValue(false)]
         public bool ShowDragStretch
         {
@@ -1248,53 +1248,340 @@ namespace Sunny.UI
                     ShowRadius = false;
                     Padding = new Padding(2, showTitle ? TitleHeight : 2, 2, 2);
                 }
+                else
+                {
+                    ShowRect = false;
+                    Padding = new Padding(0, showTitle ? TitleHeight : 0, 0, 0);
+                }
             }
         }
 
         #region 拉拽调整窗体大小
-        const int WM_LEFT = 10;
-        const int WM_RIGHT = 11;
-        const int WM_TOP = 12;
-        const int WM_TOPLEFT = 13;
-        const int WM_TOPRIGHT = 14;
-        const int WM_BOTTOM = 15;
-        const int WM_BOTTOMLEFT = 0x10;
-        const int WM_BOTTOMRIGHT = 17;
+
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
 
-            if (ShowDragStretch && WindowState == FormWindowState.Normal && m.Msg == 0x0084)
+            if (m.Msg == Win32.User.WM_NCHITTEST && ShowDragStretch && WindowState == FormWindowState.Normal)
             {
-                Point vPoint = new Point((int)m.LParam & 0xFFFF, (int)m.LParam >> 16 & 0xFFFF);
+                //Point vPoint = new Point((int)m.LParam & 0xFFFF, (int)m.LParam >> 16 & 0xFFFF);                
+                Point vPoint = new Point(MousePosition.X, MousePosition.Y);//修正有分屏后，调整窗体大小时鼠标显示左右箭头问题
                 vPoint = PointToClient(vPoint);
                 int dragSize = 5;
                 if (vPoint.X <= dragSize)
                 {
                     if (vPoint.Y <= dragSize)
-                        m.Result = (IntPtr)WM_TOPLEFT;
+                        m.Result = (IntPtr)Win32.User.HTTOPLEFT;
                     else if (vPoint.Y >= ClientSize.Height - dragSize)
-                        m.Result = (IntPtr)WM_BOTTOMLEFT;
-                    else m.Result = (IntPtr)WM_LEFT;
+                        m.Result = (IntPtr)Win32.User.HTBOTTOMLEFT;
+                    else m.Result = (IntPtr)Win32.User.HTLEFT;
                 }
                 else if (vPoint.X >= ClientSize.Width - dragSize)
                 {
                     if (vPoint.Y <= dragSize)
-                        m.Result = (IntPtr)WM_TOPRIGHT;
+                        m.Result = (IntPtr)Win32.User.HTTOPRIGHT;
                     else if (vPoint.Y >= ClientSize.Height - dragSize)
-                        m.Result = (IntPtr)WM_BOTTOMRIGHT;
-                    else m.Result = (IntPtr)WM_RIGHT;
+                        m.Result = (IntPtr)Win32.User.HTBOTTOMRIGHT;
+                    else m.Result = (IntPtr)Win32.User.HTRIGHT;
                 }
                 else if (vPoint.Y <= dragSize)
                 {
-                    m.Result = (IntPtr)WM_TOP;
+                    m.Result = (IntPtr)Win32.User.HTTOP;
                 }
                 else if (vPoint.Y >= ClientSize.Height - dragSize)
                 {
-                    m.Result = (IntPtr)WM_BOTTOM;
+                    m.Result = (IntPtr)Win32.User.HTBOTTOM;
                 }
             }
+
+            if (m.Msg == Win32.User.WM_NCPAINT && ShowShadow && m_aeroEnabled)
+            {
+                var v = 2;
+                Win32.Dwm.DwmSetWindowAttribute(Handle, 2, ref v, 4);
+                Win32.Dwm.MARGINS margins = new Win32.Dwm.MARGINS()
+                {
+                    bottomHeight = 0,
+                    leftWidth = 0,
+                    rightWidth = 0,
+                    topHeight = 1
+                };
+
+                Win32.Dwm.DwmExtendFrameIntoClientArea(Handle, ref margins);
+            }
         }
+
+        #endregion 拉拽调整窗体大小
+
+        #region 一些辅助窗口
+        /// <summary>
+        /// 显示进度提示窗
+        /// </summary>
+        /// <param name="desc">描述文字</param>
+        /// <param name="maximum">最大进度值</param>
+        public void ShowStatusForm(int maximum = 100, string desc = "系统正在处理中，请稍候...")
+        {
+            UIStatusFormService.ShowStatusForm(maximum, desc);
+        }
+
+        /// <summary>
+        /// 隐藏进度提示窗
+        /// </summary>
+        public void HideStatusForm()
+        {
+            UIStatusFormService.HideStatusForm();
+        }
+
+        /// <summary>
+        /// 设置进度提示窗步进值加1
+        /// </summary>
+        public void StatusFormStepIt()
+        {
+            UIStatusFormService.StepIt();
+        }
+
+        /// <summary>
+        /// 设置进度提示窗描述文字
+        /// </summary>
+        /// <param name="desc">描述文字</param>
+        public void SetStatusFormDescription(string desc)
+        {
+            UIStatusFormService.SetDescription(desc);
+        }
+
+        /// <summary>
+        /// 显示等待提示窗
+        /// </summary>
+        /// <param name="desc">描述文字</param>
+        public void ShowWaitForm(string desc = "系统正在处理中，请稍候...")
+        {
+            UIWaitFormService.ShowWaitForm(desc);
+        }
+
+        /// <summary>
+        /// 隐藏等待提示窗
+        /// </summary>
+        public void HideWaitForm()
+        {
+            UIWaitFormService.HideWaitForm();
+        }
+
+        /// <summary>
+        /// 设置等待提示窗描述文字
+        /// </summary>
+        /// <param name="desc">描述文字</param>
+        public void SetWaitFormDescription(string desc)
+        {
+            UIWaitFormService.SetDescription(desc);
+        }
+
+        /// <summary>
+        /// 正确信息提示框
+        /// </summary>
+        /// <param name="msg">信息</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowSuccessDialog(string msg, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, UILocalize.SuccessTitle, false, UIStyle.Green, showMask);
+        }
+
+        /// <summary>
+        /// 信息提示框
+        /// </summary>
+        /// <param name="msg">信息</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowInfoDialog(string msg, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, UILocalize.InfoTitle, false, UIStyle.Gray, showMask);
+        }
+
+        /// <summary>
+        /// 警告信息提示框
+        /// </summary>
+        /// <param name="msg">信息</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowWarningDialog(string msg, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, UILocalize.WarningTitle, false, UIStyle.Orange, showMask);
+        }
+
+        /// <summary>
+        /// 错误信息提示框
+        /// </summary>
+        /// <param name="msg">信息</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowErrorDialog(string msg, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, UILocalize.ErrorTitle, false, UIStyle.Red, showMask);
+        }
+
+        /// <summary>
+        /// 确认信息提示框
+        /// </summary>
+        /// <param name="msg">信息</param>
+        /// <param name="showMask">显示遮罩层</param>
+        /// <returns>结果</returns>
+        public bool ShowAskDialog(string msg, bool showMask = true)
+        {
+            return UIMessageDialog.ShowMessageDialog(msg, UILocalize.AskTitle, true, UIStyle.Blue, showMask);
+        }
+
+        /// <summary>
+        /// 正确信息提示框
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="msg">信息</param>
+        /// <param name="style">主题</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowSuccessDialog(string title, string msg, UIStyle style = UIStyle.Green, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, title, false, style, showMask);
+        }
+
+        /// <summary>
+        /// 信息提示框
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="msg">信息</param>
+        /// <param name="style">主题</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowInfoDialog(string title, string msg, UIStyle style = UIStyle.Gray, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, title, false, style, showMask);
+        }
+
+        /// <summary>
+        /// 警告信息提示框
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="msg">信息</param>
+        /// <param name="style">主题</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowWarningDialog(string title, string msg, UIStyle style = UIStyle.Orange, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, title, false, style, showMask);
+        }
+
+        /// <summary>
+        /// 错误信息提示框
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="msg">信息</param>
+        /// <param name="style">主题</param>
+        /// <param name="showMask">显示遮罩层</param>
+        public void ShowErrorDialog(string title, string msg, UIStyle style = UIStyle.Red, bool showMask = true)
+        {
+            UIMessageDialog.ShowMessageDialog(msg, title, false, style, showMask);
+        }
+
+        /// <summary>
+        /// 确认信息提示框
+        /// </summary>
+        /// <param name="title">标题</param>
+        /// <param name="msg">信息</param>
+        /// <param name="style">主题</param>
+        /// <param name="showMask">显示遮罩层</param>
+        /// <returns>结果</returns>
+        public bool ShowAskDialog(string title, string msg, UIStyle style = UIStyle.Blue, bool showMask = true)
+        {
+            return UIMessageDialog.ShowMessageDialog(msg, title, true, style, showMask);
+        }
+
+        /// <summary>
+        /// 显示消息
+        /// </summary>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowInfoTip(string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.Show(text, null, delay, floating);
+
+        /// <summary>
+        /// 显示成功消息
+        /// </summary>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowSuccessTip(string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowOk(text, delay, floating);
+
+        /// <summary>
+        /// 显示警告消息
+        /// </summary>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowWarningTip(string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowWarning(text, delay, floating);
+
+        /// <summary>
+        /// 显示出错消息
+        /// </summary>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowErrorTip(string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowError(text, delay, floating);
+
+        /// <summary>
+        /// 在指定控件附近显示消息
+        /// </summary>
+        /// <param name="controlOrItem">控件或工具栏项</param>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowInfoTip(Component controlOrItem, string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.Show(controlOrItem, text, null, delay, floating);
+
+        /// <summary>
+        /// 在指定控件附近显示良好消息
+        /// </summary>
+        /// <param name="controlOrItem">控件或工具栏项</param>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowSuccessTip(Component controlOrItem, string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowOk(controlOrItem, text, delay, floating);
+
+        /// <summary>
+        /// 在指定控件附近显示出错消息
+        /// </summary>
+        /// <param name="controlOrItem">控件或工具栏项</param>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowErrorTip(Component controlOrItem, string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowError(controlOrItem, text, delay, floating);
+
+        /// <summary>
+        /// 在指定控件附近显示警告消息
+        /// </summary>
+        /// <param name="controlOrItem">控件或工具栏项</param>
+        /// <param name="text">消息文本</param>
+        /// <param name="delay">消息停留时长(ms)。默认1秒</param>
+        /// <param name="floating">是否漂浮</param>
+        public void ShowWarningTip(Component controlOrItem, string text, int delay = 1000, bool floating = true)
+            => UIMessageTip.ShowWarning(controlOrItem, text, delay, floating, false);
+
+        public void ShowInfoNotifier(string desc, bool isDialog = false, int timeout = 2000)
+        {
+            UINotifierHelper.ShowNotifier(desc, UINotifierType.INFO, UILocalize.InfoTitle, false, timeout);
+        }
+
+        public void ShowSuccessNotifier(string desc, bool isDialog = false, int timeout = 2000)
+        {
+            UINotifierHelper.ShowNotifier(desc, UINotifierType.OK, UILocalize.SuccessTitle, false, timeout);
+        }
+
+        public void ShowWarningNotifier(string desc, bool isDialog = false, int timeout = 2000)
+        {
+            UINotifierHelper.ShowNotifier(desc, UINotifierType.WARNING, UILocalize.WarningTitle, false, timeout);
+        }
+
+        public void ShowErrorNotifier(string desc, bool isDialog = false, int timeout = 2000)
+        {
+            UINotifierHelper.ShowNotifier(desc, UINotifierType.ERROR, UILocalize.ErrorTitle, false, timeout);
+        }
+
         #endregion
     }
 }

@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIHorScrollBar.cs
  * 文件说明: 水平滚动条
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-07-18: V2.2.6 新增水平滚动条
@@ -45,6 +45,12 @@ namespace Sunny.UI
             foreColor = UIColor.Blue;
             fillHoverColor = Color.FromArgb(111, 168, 255);
             fillPressColor = Color.FromArgb(74, 131, 229);
+        }
+
+        ~UIHorScrollBar()
+        {
+            timer.Stop();
+            timer.Dispose();
         }
 
         private int scrollValue;

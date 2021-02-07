@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UISwitch.cs
  * 文件说明: 开关
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -28,11 +28,17 @@ using System.Drawing.Drawing2D;
 namespace Sunny.UI
 {
     [DefaultEvent("ValueChanged")]
-    [DefaultProperty("ActiveValue")]
+    [DefaultProperty("Active")]
     [ToolboxItem(true)]
     public sealed class UISwitch : UIControl
     {
         public delegate void OnValueChanged(object sender, bool value);
+
+        public enum UISwitchShape
+        {
+            Round,
+            Square
+        }
 
         public UISwitch()
         {
@@ -43,6 +49,20 @@ namespace Sunny.UI
             foreColor = Color.White;
             inActiveColor = Color.Silver;
             fillColor = Color.White;
+        }
+
+        public UISwitchShape switchShape = UISwitchShape.Round;
+
+        [Description("开关形状"), Category("SunnyUI")]
+        [DefaultValue(UISwitchShape.Round)]
+        public UISwitchShape SwitchShape
+        {
+            get => switchShape;
+            set
+            {
+                switchShape = value;
+                Invalidate();
+            }
         }
 
         public event OnValueChanged ValueChanged;
@@ -139,16 +159,16 @@ namespace Sunny.UI
 
         protected override void OnClick(EventArgs e)
         {
-            base.OnClick(e);
             Active = !Active;
+            base.OnClick(e);
         }
 
         protected override void OnDoubleClick(EventArgs e)
         {
             if (!UseDoubleClick)
             {
-                base.OnClick(e);
                 Active = !Active;
+                base.OnClick(e);
             }
             else
             {
@@ -169,22 +189,44 @@ namespace Sunny.UI
 
         protected override void OnPaintFill(Graphics g, GraphicsPath path)
         {
-            Width = (int)(Height * 2.6);
-            Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
-            g.FillRoundRectangle(Active ? ActiveColor : InActiveColor, rect, rect.Height);
+            if (SwitchShape == UISwitchShape.Round)
+            {
+                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                g.FillRoundRectangle(Active ? ActiveColor : InActiveColor, rect, rect.Height);
 
-            int width = Width - 3 - 1 - 3 - (rect.Height - 6);
-            if (!Active)
-            {
-                g.FillEllipse(fillColor.IsValid() ? fillColor : Color.White, 3, 3, rect.Height - 6, rect.Height - 6);
-                SizeF sf = g.MeasureString(InActiveText, Font);
-                g.DrawString(InActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + rect.Height - 6 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                int width = Width - 3 - 1 - 3 - (rect.Height - 6);
+                if (!Active)
+                {
+                    g.FillEllipse(fillColor.IsValid() ? fillColor : Color.White, 3, 3, rect.Height - 6, rect.Height - 6);
+                    SizeF sf = g.MeasureString(InActiveText, Font);
+                    g.DrawString(InActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + rect.Height - 6 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                }
+                else
+                {
+                    g.FillEllipse(fillColor.IsValid() ? fillColor : Color.White, Width - 3 - 1 - (rect.Height - 6), 3, rect.Height - 6, rect.Height - 6);
+                    SizeF sf = g.MeasureString(ActiveText, Font);
+                    g.DrawString(ActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                }
             }
-            else
+
+            if (SwitchShape == UISwitchShape.Square)
             {
-                g.FillEllipse(fillColor.IsValid() ? fillColor : Color.White, Width - 3 - 1 - (rect.Height - 6), 3, rect.Height - 6, rect.Height - 6);
-                SizeF sf = g.MeasureString(ActiveText, Font);
-                g.DrawString(ActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                g.FillRoundRectangle(Active ? ActiveColor : InActiveColor, rect, Radius);
+
+                int width = Width - 3 - 1 - 3 - (rect.Height - 6);
+                if (!Active)
+                {
+                    g.FillRoundRectangle(fillColor.IsValid() ? fillColor : Color.White, 3, 3, rect.Height - 6, rect.Height - 6, Radius);
+                    SizeF sf = g.MeasureString(InActiveText, Font);
+                    g.DrawString(InActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + rect.Height - 6 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                }
+                else
+                {
+                    g.FillRoundRectangle(fillColor.IsValid() ? fillColor : Color.White, Width - 3 - 1 - (rect.Height - 6), 3, rect.Height - 6, rect.Height - 6, Radius);
+                    SizeF sf = g.MeasureString(ActiveText, Font);
+                    g.DrawString(ActiveText, Font, fillColor.IsValid() ? fillColor : Color.White, 3 + (width - sf.Width) / 2, 3 + (rect.Height - 6 - sf.Height) / 2);
+                }
             }
         }
     }

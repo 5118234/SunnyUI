@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UINavMenu.cs
  * 文件说明: 导航菜单
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -87,6 +87,12 @@ namespace Sunny.UI
         [Description("获取或设置包含有关控件的数据的对象字符串"), Category("SunnyUI")]
         public string TagString { get; set; }
 
+        public void ClearAll()
+        {
+            Nodes.Clear();
+            MenuHelper.Clear();
+        }
+
         protected override void OnBackColorChanged(EventArgs e)
         {
             base.OnBackColorChanged(e);
@@ -150,6 +156,28 @@ namespace Sunny.UI
                     Invalidate();
                 }
             }
+        }
+        /// <summary>
+        /// SizeChange导致treeNode闪屏
+        /// </summary>
+        const int TVM_SETEXTENDEDSTYLE = 0x112C;
+        const int TVS_EX_DOUBLEBUFFER = 0x0004;
+
+        private void UpdateExtendedStyles()
+        {
+            int Style = 0;
+
+            if (DoubleBuffered)
+                Style |= TVS_EX_DOUBLEBUFFER;
+
+            if (Style != 0)
+                Win32.User.SendMessage(Handle, TVM_SETEXTENDEDSTYLE, new IntPtr(TVS_EX_DOUBLEBUFFER), new IntPtr(Style));
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            UpdateExtendedStyles();
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -476,11 +504,12 @@ namespace Sunny.UI
                     if (MenuHelper.GetSymbol(e.Node) > 0)
                     {
                         SizeF fiSize = e.Graphics.GetFontImageSize(MenuHelper.GetSymbol(e.Node), MenuHelper.GetSymbolSize(e.Node));
-                        e.Graphics.DrawFontImage(MenuHelper.GetSymbol(e.Node), MenuHelper.GetSymbolSize(e.Node), ForeColor, imageLeft + (MenuHelper.GetSymbolSize(e.Node) - fiSize.Width) / 2.0f, e.Bounds.Y + (e.Bounds.Height - fiSize.Height) / 2);
+                        Color color = e.Node == SelectedNode ? SelectedForeColor : ForeColor;
+                        e.Graphics.DrawFontImage(MenuHelper.GetSymbol(e.Node), MenuHelper.GetSymbolSize(e.Node), color, imageLeft + (MenuHelper.GetSymbolSize(e.Node) - fiSize.Width) / 2.0f, e.Bounds.Y + (e.Bounds.Height - fiSize.Height) / 2);
                     }
                     else
                     {
-                        if (TreeNodeSelected(e) && e.Node.SelectedImageIndex >= 0 && e.Node.SelectedImageIndex < ImageList.Images.Count)
+                        if (e.Node == SelectedNode && e.Node.SelectedImageIndex >= 0 && e.Node.SelectedImageIndex < ImageList.Images.Count)
                             e.Graphics.DrawImage(ImageList.Images[e.Node.SelectedImageIndex], imageLeft, e.Bounds.Y + (e.Bounds.Height - ImageList.ImageSize.Height) / 2);
                         else
                             e.Graphics.DrawImage(ImageList.Images[e.Node.ImageIndex], imageLeft, e.Bounds.Y + (e.Bounds.Height - ImageList.ImageSize.Height) / 2);
@@ -516,12 +545,6 @@ namespace Sunny.UI
                 tipsColor = value;
                 Invalidate();
             }
-        }
-
-        private bool TreeNodeSelected(DrawTreeNodeEventArgs e)
-        {
-            return e.State == TreeNodeStates.Selected || e.State == TreeNodeStates.Focused ||
-                   e.State == (TreeNodeStates.Focused | TreeNodeStates.Selected);
         }
 
         [Description("展开节点后选中第一个子节点"), DefaultValue(true), Category("SunnyUI")]
@@ -600,7 +623,7 @@ namespace Sunny.UI
             {
                 if (MenuHelper.GetPageIndex(node) >= 0)
                 {
-                    AllNodes.AddOrUpdate(MenuHelper.GetPageIndex(node), node);
+                    AllNodes.TryAddOrUpdate(MenuHelper.GetPageIndex(node), node);
                 }
 
                 GetAllNodes(node.Nodes);
@@ -626,6 +649,11 @@ namespace Sunny.UI
             }
 
             MenuItemClick?.Invoke(SelectedNode, MenuHelper[SelectedNode], MenuHelper.GetPageIndex(SelectedNode));
+        }
+
+        public TreeNode GetTreeNode(int pageIndex)
+        {
+            return MenuHelper.GetTreeNode(pageIndex);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -719,7 +747,7 @@ namespace Sunny.UI
         {
             base.WndProc(ref m);
             if (IsDisposed || Disposing) return;
-            ScrollBarInfo.ShowScrollBar(Handle, 3, false);
+            Win32.User.ShowScrollBar(Handle, 3, false);
         }
 
         public TreeNode CreateNode(string text, int pageIndex)

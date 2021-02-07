@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UINavMenuHelper.cs
  * 文件说明: 导航菜单帮助类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -33,12 +33,13 @@ namespace Sunny.UI
             get
             {
                 if (node == null) return null;
-
-                if (Items.ContainsKey(node))
-                    return Items[node];
-                else
-                    return null;
+                return Items.ContainsKey(node) ? Items[node] : null;
             }
+        }
+
+        public void Clear()
+        {
+            Items.Clear();
         }
 
         private readonly ConcurrentDictionary<TreeNode, NavMenuItem> Items = new ConcurrentDictionary<TreeNode, NavMenuItem>();
@@ -135,6 +136,19 @@ namespace Sunny.UI
             node.ImageIndex = item.ImageIndex;
             node.SelectedImageIndex = item.SelectedImageIndex;
             node.Tag = item;
+        }
+
+        public TreeNode GetTreeNode(int pageIndex)
+        {
+            foreach (var pair in Items)
+            {
+                if (pair.Value.PageIndex == pageIndex)
+                {
+                    return pair.Key;
+                }
+            }
+
+            return null;
         }
     }
 
@@ -285,10 +299,10 @@ namespace Sunny.UI
             if (pageIndex < 0) return;
             foreach (var item in PageItems)
             {
-                if (item.Value.PageIndex == pageIndex && item.Key!=null)
+                if (item.Value.PageIndex == pageIndex && item.Key != null)
                 {
-                   if (tabControl.TabPages.Contains(item.Key))
-                    tabControl.SelectTab(item.Key);
+                    if (tabControl.TabPages.Contains(item.Key))
+                        tabControl.SelectTab(item.Key);
                 }
             }
         }

@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIPagination.cs
  * 文件说明: 分页
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-07-26
  *
  * 2020-07-15: V2.2.6 新增分页控件
@@ -203,7 +203,7 @@ namespace Sunny.UI
             get => activePage;
             set
             {
-                if (activePage != value)
+                //if (activePage != value)
                 {
                     activePage = Math.Max(1, value);
                     edtPage.IntValue = activePage;
@@ -846,7 +846,7 @@ namespace Sunny.UI
         {
             if (dataSource == null)
             {
-                PageChanged?.Invoke(this, dataSource, 1, 0);
+                PageChanged?.Invoke(this, dataSource, activePage, 0);
                 return;
             }
 

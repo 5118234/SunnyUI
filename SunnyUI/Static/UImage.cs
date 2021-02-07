@@ -13,18 +13,20 @@
  ******************************************************************************
  * 文件名称: UImage.cs
  * 文件说明: 图像扩展类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
 ******************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Sunny.UI
@@ -40,7 +42,68 @@ namespace Sunny.UI
     /// </summary>
     public static class ImageEx
     {
-        public static ImageList GetToolbarImageList(Type type, Bitmap bitmap, Size imageSize, Color transparentColor)
+        /// <summary>
+        /// 获取打开文件对话框所有的图片类型过滤条件
+        /// ------
+        /// All Images|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.TIF;*.TIFF;*.PNG|
+        /// BMP Files: (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|
+        /// JPEG Files: (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|
+        /// GIF Files: (*.GIF)|*.GIF|
+        /// TIFF Files: (*.TIF;*.TIFF)|*.TIF;*.TIFF|
+        /// PNG Files: (*.PNG)|*.PNG|
+        /// All Files|*.*
+        /// ------
+        /// </summary>
+        /// <returns></returns>
+        public static string GetImageFilter()
+        {
+            StringBuilder allImageExtensions = new StringBuilder();
+            string separator = "";
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+            Dictionary<string, string> images = new Dictionary<string, string>();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                allImageExtensions.Append(separator);
+                allImageExtensions.Append(codec.FilenameExtension);
+                separator = ";";
+                images.Add(string.Format("{0} Files: ({1})", codec.FormatDescription, codec.FilenameExtension), codec.FilenameExtension);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            if (allImageExtensions.Length > 0)
+            {
+                sb.AppendFormat("{0}|{1}", "All Images", allImageExtensions.ToString());
+            }
+
+            images.Add("All Files", "*.*");
+            foreach (KeyValuePair<string, string> image in images)
+            {
+                sb.AppendFormat("|{0}|{1}", image.Key, image.Value);
+            }
+
+            return sb.ToString();
+        }
+
+        public static Color RandomColor()
+        {
+            Random random = new Random();
+            return Color.FromArgb(random.Next(0, 256), random.Next(0, 256), random.Next(0, 256));
+        }
+
+        public static Bitmap ChangeOpacity(Image img, float opacity)
+        {
+            Bitmap bmp = new Bitmap(img.Width, img.Height); // Determining Width and Height of Source Image
+            Graphics graphics = bmp.Graphics();
+            ColorMatrix matrix = new ColorMatrix();
+            matrix.Matrix33 = opacity;
+            ImageAttributes imgAttribute = new ImageAttributes();
+            imgAttribute.SetColorMatrix(matrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
+            graphics.DrawImage(img, new Rectangle(0, 0, bmp.Width, bmp.Height), 0, 0, img.Width, img.Height, GraphicsUnit.Pixel, imgAttribute);
+            graphics.Dispose();   // Releasing all resource used by graphics 
+            return bmp;
+        }
+
+        public static ImageList GetToolbarImageList(Type type, Image bitmap, Size imageSize, Color transparentColor)
         {
             ImageList imageList = new ImageList();
             imageList.ImageSize = imageSize;
@@ -50,7 +113,7 @@ namespace Sunny.UI
             return imageList;
         }
 
-        public static Bitmap Split(this Bitmap image, int size, UIShape shape)
+        public static Bitmap Split(this Image image, int size, UIShape shape)
         {
             //截图画板
             Bitmap result = new Bitmap(size, size);
@@ -81,7 +144,7 @@ namespace Sunny.UI
             return result;
         }
 
-        public static Bitmap Split(this Bitmap image, GraphicsPath path)
+        public static Bitmap Split(this Image image, GraphicsPath path)
         {
             //截图画板
             Bitmap result = new Bitmap(image.Width, image.Height);
@@ -188,7 +251,7 @@ namespace Sunny.UI
         /// <param name="angle">角度</param>
         /// <param name="bkColor">背景色</param>
         /// <returns>图片</returns>
-        public static Bitmap Rotate(this Bitmap bmp, float angle, Color bkColor)
+        public static Bitmap Rotate(this Image bmp, float angle, Color bkColor)
         {
             int w = bmp.Width;
             int h = bmp.Height;
@@ -301,7 +364,7 @@ namespace Sunny.UI
         /// <param name="newW">宽度</param>
         /// <param name="newH">高度</param>
         /// <returns>新图片</returns>
-        public static Bitmap ResizeImage(this Bitmap bmp, int newW, int newH)
+        public static Bitmap ResizeImage(this Image bmp, int newW, int newH)
         {
             if (bmp == null)
             {

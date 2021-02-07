@@ -13,14 +13,16 @@
  ******************************************************************************
  * 文件名称: UIMainFrame.cs
  * 文件说明: 页面框架基类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-05-05
  *
  * 2020-05-05: V2.2.5 页面框架基类
 ******************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace Sunny.UI
 {
@@ -31,7 +33,34 @@ namespace Sunny.UI
             InitializeComponent();
             MainContainer.TabVisible = false;
             MainContainer.BringToFront();
+            MainContainer.TabPages.Clear();
+
+            MainContainer.BeforeRemoveTabPage += MainContainer_BeforeRemoveTabPage;
+            MainContainer.AfterRemoveTabPage += MainContainer_AfterRemoveTabPage;
         }
+
+        [DefaultValue(false)]
+        [Description("多页面框架时，包含UIPage，在点击Tab页关闭时关闭UIPage"), Category("SunnyUI")]
+        public bool AutoClosePage
+        {
+            get => MainContainer.AutoClosePage;
+            set => MainContainer.AutoClosePage = value;
+        }
+
+        private void MainContainer_AfterRemoveTabPage(object sender, int index)
+        {
+            AfterRemoveTabPage?.Invoke(sender, index);
+        }
+
+        private bool MainContainer_BeforeRemoveTabPage(object sender, int index)
+        {
+            return BeforeRemoveTabPage == null || BeforeRemoveTabPage.Invoke(this, index);
+        }
+
+        public event UITabControl.OnBeforeRemoveTabPage BeforeRemoveTabPage;
+
+        public event UITabControl.OnAfterRemoveTabPage AfterRemoveTabPage;
+
 
         protected override void OnShown(EventArgs e)
         {
@@ -41,6 +70,7 @@ namespace Sunny.UI
 
         public UIPage AddPage(UIPage page, int index)
         {
+            page.Frame = this;
             page.PageIndex = index;
             MainContainer.AddPage(page);
             return page;
@@ -48,6 +78,7 @@ namespace Sunny.UI
 
         public UIPage AddPage(UIPage page, Guid guid)
         {
+            page.Frame = this;
             page.PageGuid = guid;
             MainContainer.AddPage(page);
             return page;
@@ -55,11 +86,12 @@ namespace Sunny.UI
 
         public UIPage AddPage(UIPage page)
         {
+            page.Frame = this;
             MainContainer.AddPage(page);
             return page;
         }
 
-        public void SelectPage(int pageIndex)
+        public virtual void SelectPage(int pageIndex)
         {
             MainContainer.SelectPage(pageIndex);
         }
@@ -83,5 +115,19 @@ namespace Sunny.UI
             get => MainContainer.ShowActiveCloseButton;
             set => MainContainer.ShowActiveCloseButton = value;
         }
+
+        private void MainContainer_Selecting(object sender, TabControlCancelEventArgs e)
+        {
+            if (Selecting != null)
+            {
+                List<UIPage> pages = e.TabPage.GetControls<UIPage>();
+                Selecting?.Invoke(this, e, pages.Count == 0 ? null : pages[0]);
+            }
+        }
+
+        public delegate void OnSelecting(object sender, TabControlCancelEventArgs e, UIPage page);
+
+        [Description("页面选择事件"), Category("SunnyUI")]
+        public event OnSelecting Selecting;
     }
 }

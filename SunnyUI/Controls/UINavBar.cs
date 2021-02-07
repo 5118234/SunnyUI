@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UINavBar.cs
  * 文件说明: 导航栏
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -41,11 +41,10 @@ namespace Sunny.UI
 
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.DoubleBuffer, true);
-            SetStyle(ControlStyles.ResizeRedraw, true);
-            SetStyle(ControlStyles.Selectable, true);
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            SetStyle(ControlStyles.ResizeRedraw, true);
             DoubleBuffered = true;
             UpdateStyles();
             Font = UIFontColor.Font;
@@ -55,6 +54,18 @@ namespace Sunny.UI
             Width = 500;
             Height = 110;
             Version = UIGlobal.Version;
+        }
+
+        public void ClearAll()
+        {
+            Nodes.Clear();
+            MenuHelper.Clear();
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            if (NavBarMenu != null) NavBarMenu.Font = Font;
         }
 
         [DefaultValue(null)]
@@ -158,8 +169,26 @@ namespace Sunny.UI
             foreColor = uiColor.UnSelectedForeColor;
             backColor = uiColor.BackColor;
             menuHoverColor = uiColor.HoverColor;
+            menuSelectedColor = uiColor.SelectedColor;
             Invalidate();
         }
+
+        private Color menuSelectedColor = Color.FromArgb(36, 36, 36);
+
+        [DefaultValue(typeof(Color), "36, 36, 36")]
+        [Description("菜单栏选中背景颜色"), Category("SunnyUI")]
+        public Color MenuSelectedColor
+        {
+            get => menuSelectedColor;
+            set
+            {
+                menuSelectedColor = value;
+                _menuStyle = UIMenuStyle.Custom;
+            }
+        }
+
+        [Description("选中使用菜单栏选中背景颜色MenuSelectedColor，不选用则使用背景色BackColor"), Category("SunnyUI"), DefaultValue(false)]
+        public bool MenuSelectedColorUsed { get; set; }
 
         private Color menuHoverColor = Color.FromArgb(76, 76, 76);
 
@@ -226,6 +255,7 @@ namespace Sunny.UI
         }
 
         [DefaultValue(null)]
+        [Browsable(false)]
         [Description("下拉菜单图片列表"), Category("SunnyUI")]
         public ImageList DropMenuImageList
         {
@@ -344,6 +374,11 @@ namespace Sunny.UI
 
                 if (i == SelectedIndex)
                 {
+                    if (MenuSelectedColorUsed)
+                    {
+                        e.Graphics.FillRectangle(MenuSelectedColor, rect.X, Height - NodeSize.Height, rect.Width, NodeSize.Height);
+                    }
+
                     if (!NavBarMenu.Visible)
                     {
                         e.Graphics.FillRectangle(SelectedHighColor, rect.X, Height - 4, rect.Width, 4);
@@ -471,10 +506,12 @@ namespace Sunny.UI
 
             NavBarMenu.Style = UIStyles.Style;
             NavBarMenu.Items.Clear();
+            NavBarMenu.ImageList = ImageList;
             foreach (TreeNode node in Nodes[SelectedIndex].Nodes)
             {
                 ToolStripMenuItem item = new ToolStripMenuItem(node.Text) { Tag = node };
                 item.Click += Item_Click;
+                if (ImageList != null) item.ImageIndex = node.ImageIndex;
                 NavBarMenu.Items.Add(item);
 
                 if (node.Nodes.Count > 0)
@@ -494,12 +531,24 @@ namespace Sunny.UI
             {
                 item.AutoSize = false;
                 item.Width = NavBarMenu.Width - 1;
-                item.Height = 30;
+
+                if (!DropDownItemAutoHeight)
+                {
+                    item.Height = DropDownItemHeight;
+                }
             }
 
             NavBarMenu.CalcHeight();
             NavBarMenu.Show(this, NodeMenuLeft(SelectedIndex), Height);
         }
+
+        [DefaultValue(30)]
+        [Description("下拉菜单节点高度"), Category("SunnyUI")]
+        public int DropDownItemHeight { get; set; } = 30;
+
+        [DefaultValue(false)]
+        [Description("下拉菜单节点自动高度"), Category("SunnyUI")]
+        public bool DropDownItemAutoHeight { get; set; } = false;
 
         private void Item_Click(object sender, EventArgs e)
         {
@@ -525,6 +574,7 @@ namespace Sunny.UI
             foreach (TreeNode childNode in node.Nodes)
             {
                 ToolStripMenuItem childItem = new ToolStripMenuItem(childNode.Text) { Tag = childNode };
+                if (ImageList != null) childItem.ImageIndex = childNode.ImageIndex;
                 childItem.Click += Item_Click;
                 item.DropDownItems.Add(childItem);
 

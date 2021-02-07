@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UISymbolButton.cs
  * 文件说明: 字体图标按钮
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -31,7 +31,7 @@ namespace Sunny.UI
 {
     [DefaultEvent("Click")]
     [DefaultProperty("Text")]
-    public sealed class UISymbolButton : UIButton
+    public class UISymbolButton : UIButton
     {
         private int _symbolSize = 24;
         private int _imageInterval = 2;
@@ -166,6 +166,12 @@ namespace Sunny.UI
             }
         }
 
+        protected override void OnPaddingChanged(EventArgs e)
+        {
+            base.OnPaddingChanged(e);
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             //重绘父类
@@ -195,14 +201,18 @@ namespace Sunny.UI
                         if (Symbol > 0 && Image == null)
                         {
                             e.Graphics.DrawFontImage(Symbol, SymbolSize, color,
-                                new RectangleF((Width - ImageSize.Width) / 2.0f, (Height - ImageSize.Height) / 2.0f,
-                                    ImageSize.Width, ImageSize.Height));
+                                new RectangleF(
+                                    (Width - ImageSize.Width) / 2.0f,
+                                    Padding.Top + (Height - ImageSize.Height - Padding.Top - Padding.Bottom) / 2.0f,
+                                      ImageSize.Width, ImageSize.Height));
                         }
 
                         if (Image != null)
                         {
-                            e.Graphics.DrawImage(Image, (Width - Image.Width) / 2.0f, (Height - Image.Height) / 2.0f,
-                                ImageSize.Width, ImageSize.Height);
+                            e.Graphics.DrawImage(Image,
+                                (Width - ImageSize.Width) / 2.0f,
+                                Padding.Top + (Height - ImageSize.Height - Padding.Top - Padding.Bottom) / 2.0f,
+                                  ImageSize.Width, ImageSize.Height);
                         }
                     }
                 }

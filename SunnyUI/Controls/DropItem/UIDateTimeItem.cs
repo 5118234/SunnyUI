@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIDateTimeItem.cs
  * 文件说明: 日期选择框弹出窗体
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -705,6 +705,9 @@ namespace Sunny.UI
             months.Add("十月");
             months.Add("十一月");
             months.Add("十二月");
+
+            btnOK.Text = UILocalize.OK;
+            btnCancel.Text = UILocalize.Cancel;
         }
 
         private int activeDay = -1;
@@ -1129,8 +1132,8 @@ namespace Sunny.UI
 
         private void p1_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            int width = p2.Width / 4;
-            int height = p2.Height / 3;
+            int width = p1.Width / 4;
+            int height = p1.Height / 3;
             int x = e.Location.X / width;
             int y = e.Location.Y / height;
             int iy = x + y * 4;

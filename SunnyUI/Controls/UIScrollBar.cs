@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIScrollBar.cs
  * 文件说明: 滚动条
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -63,6 +63,12 @@ namespace Sunny.UI
         private bool largeChange = true;
 
         public event EventHandler ValueChanged;
+
+        ~UIScrollBar()
+        {
+            timer.Stop();
+            timer.Dispose();
+        }
 
         [DefaultValue(0)]
         [Description("当前值"), Category("SunnyUI")]

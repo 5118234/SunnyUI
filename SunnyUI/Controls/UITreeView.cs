@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UITreeView.cs
  * 文件说明: 树形列表
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-05-05
  *
  * 2020-05-05: V2.2.5 增加文件
@@ -66,8 +66,9 @@ namespace Sunny.UI
             if (view != null)
             {
                 view.SelectedForeColor = UIColor.White;
+                view.FillColor = view.BackColor = fillColor = UIColor.White;
+
                 rectColor = uiColor.RectColor;
-                view.BackColor = fillColor = UIColor.White;
                 view.SelectedColor = uiColor.TreeViewSelectedColor;
                 view.ForeColor = foreColor = UIFontColor.Primary;
                 view.HoverColor = uiColor.TreeViewHoverColor;
@@ -76,6 +77,7 @@ namespace Sunny.UI
             if (Bar != null)
             {
                 Bar.FillColor = UIColor.White;
+
                 Bar.ForeColor = uiColor.PrimaryColor;
                 Bar.HoverColor = uiColor.ButtonFillHoverColor;
                 Bar.PressColor = uiColor.ButtonFillPressColor;
@@ -91,6 +93,11 @@ namespace Sunny.UI
             {
                 view.FillColor = color;
                 view.BackColor = color;
+            }
+
+            if (Bar != null)
+            {
+                Bar.FillColor = color;
             }
         }
 
@@ -678,7 +685,7 @@ namespace Sunny.UI
 
                     if (haveImage)
                     {
-                        if (TreeNodeSelected(e) && e.Node.SelectedImageIndex >= 0 &&
+                        if (e.Node == SelectedNode && e.Node.SelectedImageIndex >= 0 &&
                             e.Node.SelectedImageIndex < ImageList.Images.Count)
                             e.Graphics.DrawImage(ImageList.Images[e.Node.SelectedImageIndex], imageLeft,
                                 e.Bounds.Y + (e.Bounds.Height - ImageList.ImageSize.Height) / 2);
@@ -734,7 +741,7 @@ namespace Sunny.UI
                                 {
                                     lineX -= Indent;
 
-                                    if (pNode.Level == 0 && pNode.NextNode != null)
+                                    if (pNode.NextNode != null)
                                         e.Graphics.DrawLine(pn, lineX, lineY, lineX, e.Node.Bounds.Top);
 
                                     if (pNode.NextNode != null)

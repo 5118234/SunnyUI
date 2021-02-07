@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIGrid.cs
  * 文件说明: 表格
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -173,8 +173,8 @@ namespace Sunny.UI
             {
                 HBar.Maximum = HorizontalScrollBar.Maximum;
                 HBar.Value = HorizontalScrollBar.Value;
-                HBar.BoundsWidth = HorizontalScrollBar.Bounds.Width;
-                HBar.LargeChange = HorizontalScrollBar.Maximum / VisibleColumnCount();
+                HBar.BoundsWidth = HorizontalScrollBar.LargeChange;
+                HBar.LargeChange = HorizontalScrollBar.LargeChange;//.Maximum / VisibleColumnCount();
                 HBar.Visible = true;
             }
             else
@@ -183,17 +183,6 @@ namespace Sunny.UI
             }
 
             SetBarPosition();
-        }
-
-        private int VisibleColumnCount()
-        {
-            int cnt = 0;
-            foreach (DataGridViewColumn column in Columns)
-            {
-                if (column.Visible) cnt++;
-            }
-
-            return cnt;
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -243,6 +232,18 @@ namespace Sunny.UI
             SetBarPosition();
         }
 
+        protected override void OnColumnStateChanged(DataGridViewColumnStateChangedEventArgs e)
+        {
+            base.OnColumnStateChanged(e);
+            SetScrollInfo();
+        }
+
+        protected override void OnColumnRemoved(DataGridViewColumnEventArgs e)
+        {
+            base.OnColumnRemoved(e);
+            SetScrollInfo();
+        }
+
         private void SetBarPosition()
         {
             if (ShowRect)
@@ -284,6 +285,8 @@ namespace Sunny.UI
             {
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             }
+
+            SetScrollInfo();
         }
 
         private UIStyle _style = UIStyle.Blue;
@@ -335,9 +338,15 @@ namespace Sunny.UI
 
         public void SetStyleColor(UIBaseStyle uiColor)
         {
-            //标题行颜色
+            //列头部颜色
             ColumnHeadersDefaultCellStyle.BackColor = uiColor.TitleColor;
             ColumnHeadersDefaultCellStyle.ForeColor = uiColor.TitleForeColor;
+            ColumnHeadersDefaultCellStyle.SelectionBackColor = uiColor.TitleColor;
+
+            //行头部颜色
+            RowHeadersDefaultCellStyle.BackColor = uiColor.PlainColor;
+            RowHeadersDefaultCellStyle.ForeColor = uiColor.TitleForeColor;
+            RowHeadersDefaultCellStyle.SelectionBackColor = uiColor.TitleColor;
 
             //数据行选中颜色
             DefaultCellStyle.SelectionBackColor = uiColor.GridSelectedColor;
@@ -465,23 +474,23 @@ namespace Sunny.UI
             }
         }
 
-        protected override void OnGridColorChanged(EventArgs e)
-        {
-            base.OnGridColorChanged(e);
-            _style = UIStyle.Custom;
-        }
-
-        protected override void OnDefaultCellStyleChanged(EventArgs e)
-        {
-            base.OnDefaultCellStyleChanged(e);
-            _style = UIStyle.Custom;
-        }
-
-        protected override void OnColumnDefaultCellStyleChanged(DataGridViewColumnEventArgs e)
-        {
-            base.OnColumnDefaultCellStyleChanged(e);
-            _style = UIStyle.Custom;
-        }
+        // protected override void OnGridColorChanged(EventArgs e)
+        // {
+        //     base.OnGridColorChanged(e);
+        //     _style = UIStyle.Custom;
+        // }
+        //
+        // protected override void OnDefaultCellStyleChanged(EventArgs e)
+        // {
+        //     base.OnDefaultCellStyleChanged(e);
+        //     _style = UIStyle.Custom;
+        // }
+        //
+        // protected override void OnColumnDefaultCellStyleChanged(DataGridViewColumnEventArgs e)
+        // {
+        //     base.OnColumnDefaultCellStyleChanged(e);
+        //     _style = UIStyle.Custom;
+        // }
 
         public DataGridViewColumn AddColumn(string columnName, string dataPropertyName, int fillWeight = 100, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleCenter, bool readOnly = true)
         {
@@ -544,10 +553,10 @@ namespace Sunny.UI
             ClearColumns();
         }
 
-        // public void AddRow(params object[] values)
-        // {
-        //     Rows.Add(values);
-        // }
+        public int AddRow(params object[] values)
+        {
+            return Rows.Add(values);
+        }
     }
 
     public static class UIDataGridViewHelper

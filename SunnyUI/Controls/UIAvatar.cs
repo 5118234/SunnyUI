@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIAvatar.cs
  * 文件说明: 头像
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -237,6 +237,12 @@ namespace Sunny.UI
             }
         }
 
+        [DefaultValue(0), Description("水平偏移"), Category("SunnyUI")]
+        public int OffsetX { get; set; } = 0;
+
+        [DefaultValue(0), Description("垂直偏移"), Category("SunnyUI")]
+        public int OffsetY { get; set; } = 0;
+
         /// <summary>
         /// OnPaint
         /// </summary>
@@ -288,13 +294,13 @@ namespace Sunny.UI
 
             if (Icon == UIIcon.Symbol)
             {
-                e.Graphics.DrawFontImage(symbol, symbolSize, ForeColor, new Rectangle((Width - avatarSize) / 2 + 1, (Height - avatarSize) / 2 + 1, avatarSize, avatarSize));
+                e.Graphics.DrawFontImage(symbol, symbolSize, ForeColor, new Rectangle((Width - avatarSize) / 2 + 1 + OffsetX, (Height - avatarSize) / 2 + 1 + OffsetY, avatarSize, avatarSize));
             }
 
             if (Icon == UIIcon.Text)
             {
                 SizeF sf = e.Graphics.MeasureString(Text, Font);
-                e.Graphics.DrawString(Text, Font, foreColor, 2 + (Width - sf.Width) / 2.0f, (Height - sf.Height) / 2.0f);
+                e.Graphics.DrawString(Text, Font, foreColor, (Width - sf.Width) / 2.0f + OffsetX, (Height - sf.Height) / 2.0f + 1 + OffsetY);
             }
         }
     }

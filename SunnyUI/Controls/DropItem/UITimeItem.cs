@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIDateTimeItem.cs
  * 文件说明: 时间选择框弹出窗体
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-05-29
  *
  * 2020-05-29: V2.2.5 创建
@@ -414,6 +414,8 @@ namespace Sunny.UI
         {
             InitializeComponent();
             this.MouseWheel += UITimeItem_MouseWheel;
+            btnOK.Text = UILocalize.OK;
+            btnCancel.Text = UILocalize.Cancel;
         }
 
         private void UITimeItem_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)

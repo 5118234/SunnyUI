@@ -13,7 +13,7 @@
  ******************************************************************************
  * 文件名称: UIRadiusSidesEditor.cs
  * 文件说明: 边框属性类
- * 当前版本: V2.2
+ * 当前版本: V3.0
  * 创建日期: 2020-01-01
  *
  * 2020-01-01: V2.2.0 增加文件说明
@@ -33,6 +33,7 @@ namespace Sunny.UI
     /// 圆角位置
     /// </summary>
     [ComVisible(true)]
+    [ToolboxItem(false)]
     [Editor(typeof(UIRadiusSidesEditor), typeof(System.Drawing.Design.UITypeEditor))]
     [Flags]
     public enum UICornerRadiusSides
@@ -115,7 +116,6 @@ namespace Sunny.UI
             /// <param name="value">数值</param>
             protected override void InitValue(object value)
             {
-                Console.WriteLine(value.ToString());
                 UICornerRadiusSides sides = (UICornerRadiusSides)value;
                 ResetCheckBoxState();
                 if ((sides & UICornerRadiusSides.All) == UICornerRadiusSides.All)
